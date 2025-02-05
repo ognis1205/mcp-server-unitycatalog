@@ -31,14 +31,16 @@ async def start(url: AnyHttpUrl, catalog: str, schema: str) -> None:
     server = Server("mcp-unitycatalog")
     logger = logging.getLogger(__name__)
     logger.info(f"start: {url}")
-    config = Configuration(host=f"{url}/api/2.1/unity-catalog")
-    api_client = ApiClient(configuration=config)
-    uc_client = UnitycatalogFunctionClient(api_client=api_client)
+    client = UnitycatalogFunctionClient(
+        api_client=ApiClient(
+            configuration=Configuration(host=f"{url}/api/2.1/unity-catalog")
+        )
+    )
     tool_names = {}
 
     @server.list_tools()
     async def list_tools() -> list[Tool]:
-        functions = uc_client.list_functions(catalog=catalog, schema=schema)
+        functions = client.list_functions(catalog=catalog, schema=schema)
         logger.debug(f"list_tools: {functions}")
         tools = []
         for func in functions.to_list():
@@ -60,7 +62,7 @@ async def start(url: AnyHttpUrl, catalog: str, schema: str) -> None:
     async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         tool_name = tool_names.get(name)
         if tool_name is not None:
-            result = uc_client.execute_function(
+            result = client.execute_function(
                 function_name=tool_name, parameters=arguments
             )
             logger.debug(f"call_tool: {result}")
