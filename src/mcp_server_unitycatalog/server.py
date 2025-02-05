@@ -36,39 +36,29 @@ async def start(url: AnyHttpUrl, catalog: str, schema: str) -> None:
             configuration=Configuration(host=f"{url}/api/2.1/unity-catalog")
         )
     )
-    tool_names = {}
 
     @server.list_tools()
     async def list_tools() -> list[Tool]:
         functions = client.list_functions(catalog=catalog, schema=schema)
         logger.debug(f"list_tools: {functions}")
-        tools = []
-        for func in functions.to_list():
-            path = f"{catalog}.{schema}.{func.name}"
-            name = get_tool_name(path)
-            tool_names.update({name: path})
-            tools.append(
-                Tool(
-                    name=name,
-                    description=func.comment or "",
-                    inputSchema=generate_function_input_params_schema(
-                        func
-                    ).pydantic_model.schema(),
-                )
+        return [
+            Tool(
+                name=func.name,
+                description=func.comment or "",
+                inputSchema=generate_function_input_params_schema(
+                    func
+                ).pydantic_model.schema(),
             )
-        return tools
+            for func in functions.to_list()
+        ]
 
     @server.call_tool()
     async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-        tool_name = tool_names.get(name)
-        if tool_name is not None:
-            result = client.execute_function(
-                function_name=tool_name, parameters=arguments
-            )
-            logger.debug(f"call_tool: {result}")
-            return [TextContent(type="text", text=result.to_json())]
-        else:
-            raise ValueError(f"unknown tool: {name}")
+        result = client.execute_function(
+            function_name=f"{catalog}.{schema}.{name}", parameters=arguments
+        )
+        logger.debug(f"call_tool: {result}")
+        return [TextContent(type="text", text=result.to_json())]
 
     options = server.create_initialization_options()
     async with stdio_server() as (read_stream, write_stream):
