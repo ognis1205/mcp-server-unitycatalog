@@ -1,7 +1,7 @@
 # mcp-server-unitycatalog: An Unity Catalog MCP server
 
 <p align="center" float="left">
-  <img width="256" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/screen.gif">
+  <img width="512" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/screen.gif">
 </p>
 
 ## Overview
