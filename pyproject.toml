@@ -1,7 +1,39 @@
 [project]
-name = "unitycatalog-ai-mcp-proxy"
+name = "mcp-server-unitycatalog"
 version = "0.1.0"
-description = "Add your description here"
+description = "A Model Context Protocol server that enables LLM agents to execute Unity Catalog functions seamlessly."
 readme = "README.md"
-requires-python = ">=3.9"
-dependencies = []
+requires-python = ">=3.10"
+authors = [{ name = "Shingo OKAWA" }]
+maintainers = [{ name = "Shingo OKAWA", email = "shingo.okawa.g.h.c@gmail.com" }]
+keywords = ["unitycatalog", "mcp", "llm", "automation"]
+license = { text = "MIT" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+]
+dependencies = [
+    "click>=8.1.8",
+    "mcp>=1.2.1",
+    "pydantic>=2.10.6",
+    "unitycatalog-ai>=0.1.0",
+]
+
+[project.scripts]
+mcp-server-unitycatalog = "mcp_server_unitycatalog:main"
+
+[tool.uv]
+dev-dependencies = [
+    "pyright>=1.1.393",
+    "ruff>=0.9.4",
+    "pytest>=8.3.4"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
