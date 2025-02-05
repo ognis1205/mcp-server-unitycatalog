@@ -1,5 +1,9 @@
 # mcp-server-unitycatalog: An Unity Catalog MCP server
 
+<p align="center" float="left">
+  <img width="256" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/screen.gif">
+</p>
+
 ## Overview
 
 A Model Context Protocol server for Unity Catalog Functions. This server provides Unity Catalog Functions as MCP tools.
