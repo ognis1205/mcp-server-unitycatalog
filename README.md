@@ -4,6 +4,12 @@
   <img width="512" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/screen.gif">
 </p>
 
+## TODO
+
+ - Implement support for create_python_function.
+ - Implement catalog explorer tools.
+ - Make the codebase more concise and versatile.
+
 ## Overview
 
 A Model Context Protocol server for Unity Catalog Functions. This server provides Unity Catalog Functions as MCP tools.
