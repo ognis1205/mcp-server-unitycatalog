@@ -13,7 +13,7 @@ import logging
 import sys
 from traceback import format_exc
 from pydantic.networks import AnyHttpUrl
-from .cli import Cli
+from .settings import get_settings
 from .server import start
 
 
@@ -21,16 +21,22 @@ def main() -> None:
     """MCP Unity Catalog Server - Unity Catalog Functions I/F for MCP."""
     import asyncio
 
-    cli = Cli()
+    settings = get_settings()
     level = {
         "debug": logging.DEBUG,
         "info": logging.INFO,
         "warn": logging.WARN,
         "error": logging.ERROR,
         "critical": logging.CRITICAL,
-    }[cli.uc_verbosity]
+    }[settings.uc_verbosity]
     logging.basicConfig(level=level, stream=sys.stderr)
-    asyncio.run(start(cli))
+    asyncio.run(
+        start(
+            endpoint=f"{settings.uc_server}/api/2.1/unity-catalog",
+            catalog=settings.uc_catalog,
+            schema=settings.uc_schema,
+        )
+    )
 
 
 if __name__ == "__main__":

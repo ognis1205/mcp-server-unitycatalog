@@ -27,23 +27,31 @@ from unitycatalog.ai.core.utils.function_processing_utils import (
     get_tool_name,
 )
 from unitycatalog.client import ApiClient, Configuration
-from .cli import Cli
 
 
-async def start(cli: Cli) -> None:
-    """Starts MCP Unity Catalog server."""
+async def start(endpoint: str, catalog: str, schema: str) -> None:
+    """Starts the MCP Unity Catalog server and initializes the API client.
+
+    This function sets up the server and logs the connection details.
+
+    Args:
+        endpoint (str): The base URL of the Unity Catalog API server.
+        catalog (str): The name of the Unity Catalog catalog.
+        schema (str): The name of the schema within the catalog.
+
+    Returns:
+        None
+    """
     server = Server("mcp-unitycatalog")
     logger = logging.getLogger(__name__)
-    logger.info(f"start: {cli.uc_server}")
+    logger.info(f"start: {endpoint}")
     client = UnitycatalogFunctionClient(
-        api_client=ApiClient(
-            configuration=Configuration(host=f"{cli.uc_server}/api/2.1/unity-catalog")
-        )
+        api_client=ApiClient(configuration=Configuration(host=endpoint))
     )
 
     @server.list_tools()
     async def list_tools() -> list[Tool]:
-        functions = client.list_functions(catalog=cli.uc_catalog, schema=cli.uc_schema)
+        functions = client.list_functions(catalog=catalog, schema=schema)
         logger.debug(f"list_tools: {functions}")
         return [
             Tool(
@@ -59,7 +67,7 @@ async def start(cli: Cli) -> None:
     @server.call_tool()
     async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         result = client.execute_function(
-            function_name=f"{cli.uc_catalog}.{cli.uc_schema}.{name}",
+            function_name=f"{catalog}.{schema}.{name}",
             parameters=arguments,
         )
         logger.debug(f"call_tool: {result}")

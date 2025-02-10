@@ -10,12 +10,26 @@ License:
 MIT License (c) 2025 Shingo Okawa
 """
 
+from functools import lru_cache
 from typing import Literal, Optional
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Cli(BaseSettings):
+class Settings(BaseSettings):
+    """Configuration settings for interacting with the Unity Catalog server.
+
+    This class loads configuration values from environment variables and
+    command-line arguments, enabling seamless integration with Unity Catalog.
+
+    Attributes:
+        uc_server (str): The base URL of the Unity Catalog server.
+        uc_catalog (str): The name of the Unity Catalog catalog.
+        uc_schema (str): The name of the schema within the catalog.
+        uc_token (Optional[str]): The access token for authentication.
+        uc_verbosity (Literal): The logging verbosity level (default: "warn").
+    """
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -50,3 +64,17 @@ class Cli(BaseSettings):
         "MCP Unity Catalog server.",
         validation_alias=AliasChoices("v", "uc_verbosity"),
     )
+
+
+@lru_cache
+def get_settings():
+    """Returns a cached instance of the Settings class.
+
+    This function ensures that the configuration settings are loaded only once
+    and reused across multiple calls, improving performance by avoiding redundant
+    parsing of environment variables or CLI arguments.
+
+    Returns:
+        Settings: A singleton instance of the Settings class.
+    """
+    return Settings()

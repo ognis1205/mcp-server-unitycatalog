@@ -6,11 +6,11 @@
 
 ## TODO
 
- - Implement support for create_python_function.
- - Implement catalog explorer tools.
- - Make the codebase more concise and versatile.
- - Add Docker image.
- - Consider implementing minimal data clean room support.
+ [ ] Implement support for `create_python_function`.
+ [ ] Implement catalog explorer tools.
+ [ ] Make the codebase more concise and versatile.
+ [ ] Add Docker image.
+ [ ] Consider implementing minimal data clean room support.
 
 ## Overview
 
@@ -24,7 +24,7 @@ You can use all Unity Catalog Functions registered in Unity Catalog.
 
 ## Configuration
 
-These values can be set via CLI options or environment variables. Required arguments are the Unity Catalog server, catalog, and schema, while the access token and verbosity level are optional.
+These values can be set via CLI options or environment variables. Required arguments are the Unity Catalog server, catalog, and schema, while the access token and verbosity level are optional. Run `uv run mcp-server-unitycatalog --help` for more detailed configuration options.
 
 | Argument               | Environment Variable | Description                                                                             | Required/Optional |
 |------------------------|----------------------|-----------------------------------------------------------------------------------------|-------------------|
