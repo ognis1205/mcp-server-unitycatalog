@@ -9,32 +9,28 @@ License:
 MIT License (c) 2025 Shingo OKAWA
 """
 
-import click
 import logging
 import sys
 from traceback import format_exc
 from pydantic.networks import AnyHttpUrl
+from .cli import Cli
 from .server import start
 
 
-@click.command()
-@click.option(
-    "--url", "-u", required=True, type=AnyHttpUrl, help="Unity Catalog server url"
-)
-@click.option("--catalog", "-c", required=True, type=click.STRING, help="Catalog name")
-@click.option("--schema", "-s", required=True, type=click.STRING, help="Schema name")
-@click.option("--verbose", "-v", count=True)
-def main(url: AnyHttpUrl, catalog: str, schema: str, verbose: int) -> None:
+def main() -> None:
     """MCP Unity Catalog Server - Unity Catalog Functions I/F for MCP."""
     import asyncio
 
-    level = logging.WARN
-    if verbose == 1:
-        level = logging.INFO
-    elif verbose >= 2:
-        level = logging.DEBUG
+    cli = Cli()
+    level = {
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warn": logging.WARN,
+        "error": logging.ERROR,
+        "critical": logging.CRITICAL,
+    }[cli.uc_verbosity]
     logging.basicConfig(level=level, stream=sys.stderr)
-    asyncio.run(start(url, catalog, schema))
+    asyncio.run(start(cli))
 
 
 if __name__ == "__main__":

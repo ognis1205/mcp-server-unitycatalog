@@ -10,36 +10,40 @@ License:
 MIT License (c) 2025 Shingo OKAWA
 """
 
+import ast
 import logging
-from pydantic.networks import AnyHttpUrl
+from typing import Optional
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import (
     TextContent,
     Tool,
 )
+from pydantic import BaseModel
+from pydantic.networks import AnyHttpUrl
 from unitycatalog.ai.core.client import UnitycatalogFunctionClient
 from unitycatalog.ai.core.utils.function_processing_utils import (
     generate_function_input_params_schema,
     get_tool_name,
 )
 from unitycatalog.client import ApiClient, Configuration
+from .cli import Cli
 
 
-async def start(url: AnyHttpUrl, catalog: str, schema: str) -> None:
+async def start(cli: Cli) -> None:
     """Starts MCP Unity Catalog server."""
     server = Server("mcp-unitycatalog")
     logger = logging.getLogger(__name__)
-    logger.info(f"start: {url}")
+    logger.info(f"start: {cli.uc_server}")
     client = UnitycatalogFunctionClient(
         api_client=ApiClient(
-            configuration=Configuration(host=f"{url}/api/2.1/unity-catalog")
+            configuration=Configuration(host=f"{cli.uc_server}/api/2.1/unity-catalog")
         )
     )
 
     @server.list_tools()
     async def list_tools() -> list[Tool]:
-        functions = client.list_functions(catalog=catalog, schema=schema)
+        functions = client.list_functions(catalog=cli.uc_catalog, schema=cli.uc_schema)
         logger.debug(f"list_tools: {functions}")
         return [
             Tool(
@@ -55,7 +59,8 @@ async def start(url: AnyHttpUrl, catalog: str, schema: str) -> None:
     @server.call_tool()
     async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         result = client.execute_function(
-            function_name=f"{catalog}.{schema}.{name}", parameters=arguments
+            function_name=f"{cli.uc_catalog}.{cli.uc_schema}.{name}",
+            parameters=arguments,
         )
         logger.debug(f"call_tool: {result}")
         return [TextContent(type="text", text=result.to_json())]

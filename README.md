@@ -9,6 +9,8 @@
  - Implement support for create_python_function.
  - Implement catalog explorer tools.
  - Make the codebase more concise and versatile.
+ - Add Docker image.
+ - Consider implementing minimal data clean room support.
 
 ## Overview
 
@@ -19,6 +21,18 @@ Please note that mcp-server-unitycatalog is currently in early development. The 
 ### Tools
 
 You can use all Unity Catalog Functions registered in Unity Catalog.
+
+## Configuration
+
+These values can be set via CLI options or environment variables. Required arguments are the Unity Catalog server, catalog, and schema, while the access token and verbosity level are optional.
+
+| Argument               | Environment Variable | Description                                                                             | Required/Optional |
+|------------------------|----------------------|-----------------------------------------------------------------------------------------|-------------------|
+| `-u`, `--uc_server`    | `UC_SERVER`          | The base URL of the Unity Catalog server.                                               | Required          |
+| `-c`, `--uc_catalog`   | `UC_CATALOG`         | The name of the Unity Catalog catalog.                                                  | Required          |
+| `-s`, `--uc_schema`    | `UC_SCHEMA`          | The name of the schema within a Unity Catalog catalog.                                  | Required          |
+| `-t`, `--uc_token`     | `UC_TOKEN`           | The access token used to authorize API requests to the Unity Catalog server.            | Optional          |
+| `-v`, `--uc_verbosity` | `UC_VERBOSITY`       | The verbosity level for logging or debugging Unity Catalog operations. Default: `warn`. | Optional          |
 
 ## Development
 
@@ -37,11 +51,11 @@ If you are doing local development, test your changes as follows:
         "/<path to your local git repository>/mcp-server-unitycatalog",
         "run",
         "mcp-server-unitycatalog",
-        "--url",
+        "--uc_server",
         "<your unity catalog url>",
-        "--catalog",
+        "--uc_catalog",
         "<your catalog name>",
-        "--schema",
+        "--uc_schema",
         "<your schema name>"
       ]
     }

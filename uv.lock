@@ -429,9 +429,9 @@ name = "mcp-server-unitycatalog"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "click" },
     { name = "mcp" },
     { name = "pydantic" },
+    { name = "pydantic-settings" },
     { name = "unitycatalog-ai" },
 ]
 
@@ -446,9 +446,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "click", specifier = ">=8.1.8" },
     { name = "mcp", specifier = ">=1.2.1" },
     { name = "pydantic", specifier = ">=2.10.6" },
+    { name = "pydantic-settings", specifier = ">=2.7.1" },
     { name = "unitycatalog-ai", specifier = ">=0.1.0" },
 ]
 
