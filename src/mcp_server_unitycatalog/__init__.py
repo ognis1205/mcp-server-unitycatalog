@@ -1,7 +1,5 @@
 """Unity Catalog Model Context Protocol Server.
 
-A Model Context Protocol (MCP) server enabling AI agents to execute Unity Catalog Functions seamlessly.
-
 This module provides tools for integrating Unity Catalog AI, enabling AI agents to execute Unity Catalog
 Functions on behalf of user agents.
 
@@ -18,7 +16,15 @@ from .server import start
 
 
 def main() -> None:
-    """MCP Unity Catalog Server - Unity Catalog Functions I/F for MCP."""
+    """Starts the MCP Unity Catalog Server.
+
+    This function initializes the logging configuration based on the
+    verbosity level, retrieves settings, and starts the Unity Catalog
+    server using the specified endpoint, catalog, and schema.
+
+    Returns:
+        None
+    """
     import asyncio
 
     settings = get_settings()
