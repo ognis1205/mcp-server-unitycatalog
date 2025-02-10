@@ -6,11 +6,11 @@
 
 ## TODO
 
-[ ] Implement support for `create_python_function`.
-[ ] Implement catalog explorer tools.
-[ ] Make the codebase more concise and versatile.
-[ ] Add Docker image.
-[ ] Consider implementing minimal data clean room support.
+- [ ] Implement support for `create_python_function`.
+- [ ] Implement catalog explorer tools.
+- [ ] Make the codebase more concise and versatile.
+- [ ] Add Docker image.
+- [ ] Consider implementing minimal data clean room support.
 
 ## Overview
 
