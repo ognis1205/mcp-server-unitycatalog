@@ -12,6 +12,7 @@ MIT License (c) 2025 Shingo Okawa
 
 from functools import lru_cache
 from typing import Literal, Optional
+from pathlib import Path
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -63,6 +64,12 @@ class Settings(BaseSettings):
         description="The verbosity level for logging or debugging "
         "MCP Unity Catalog server.",
         validation_alias=AliasChoices("v", "uc_verbosity"),
+    )
+    uc_log_directory: Path = Field(
+        default=Path(".mcp_server_unitycatalog"),
+        description="The directory where log files for the MCP Unity "
+        "Catalog server will be stored.",
+        validation_alias=AliasChoices("l", "uc_log_directory"),
     )
 
 

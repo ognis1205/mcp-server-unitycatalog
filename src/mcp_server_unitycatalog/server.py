@@ -10,7 +10,6 @@ License:
 MIT License (c) 2025 Shingo OKAWA
 """
 
-import ast
 import logging
 from typing import Optional
 from mcp.server import Server
@@ -44,7 +43,6 @@ async def start(endpoint: str, catalog: str, schema: str) -> None:
     """
     server = Server("mcp-unitycatalog")
     logger = logging.getLogger(__name__)
-    logger.info(f"start: {endpoint}")
     client = UnitycatalogFunctionClient(
         api_client=ApiClient(configuration=Configuration(host=endpoint))
     )

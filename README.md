@@ -24,15 +24,16 @@ You can use all Unity Catalog Functions registered in Unity Catalog.
 
 ## Configuration
 
-These values can be set via CLI options or environment variables. Required arguments are the Unity Catalog server, catalog, and schema, while the access token and verbosity level are optional. Run `uv run mcp-server-unitycatalog --help` for more detailed configuration options.
+These values can be set via CLI options or `.env` environment variables. Required arguments are the Unity Catalog server, catalog, and schema, while the access token and verbosity level are optional. Run `uv run mcp-server-unitycatalog --help` for more detailed configuration options.
 
-| Argument               | Environment Variable | Description                                                                             | Required/Optional |
-|------------------------|----------------------|-----------------------------------------------------------------------------------------|-------------------|
-| `-u`, `--uc_server`    | `UC_SERVER`          | The base URL of the Unity Catalog server.                                               | Required          |
-| `-c`, `--uc_catalog`   | `UC_CATALOG`         | The name of the Unity Catalog catalog.                                                  | Required          |
-| `-s`, `--uc_schema`    | `UC_SCHEMA`          | The name of the schema within a Unity Catalog catalog.                                  | Required          |
-| `-t`, `--uc_token`     | `UC_TOKEN`           | The access token used to authorize API requests to the Unity Catalog server.            | Optional          |
-| `-v`, `--uc_verbosity` | `UC_VERBOSITY`       | The verbosity level for logging or debugging Unity Catalog operations. Default: `warn`. | Optional          |
+| Argument                   | Environment Variable | Description                                                                        | Required/Optional |
+|----------------------------|----------------------|------------------------------------------------------------------------------------|-------------------|
+| `-u`, `--uc_server`        | `UC_SERVER`          | The base URL of the Unity Catalog server.                                          | Required          |
+| `-c`, `--uc_catalog`       | `UC_CATALOG`         | The name of the Unity Catalog catalog.                                             | Required          |
+| `-s`, `--uc_schema`        | `UC_SCHEMA`          | The name of the schema within a Unity Catalog catalog.                             | Required          |
+| `-t`, `--uc_token`         | `UC_TOKEN`           | The access token used to authorize API requests to the Unity Catalog server.       | Optional          |
+| `-v`, `--uc_verbosity`     | `UC_VERBOSITY`       | The verbosity level for logging. Default: `warn`.                                  | Optional          |
+| `-l`, `--uc_log_directory` | `UC_LOG_DIRECTORY`   | The directory where log files will be stored. Default: `.mcp_server_unitycatalog`. | Optional          |
 
 ## Development
 
