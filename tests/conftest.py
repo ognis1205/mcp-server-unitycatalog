@@ -86,8 +86,8 @@ def schema():
 def setup_function():
     """Automatically clears the settings cache before each test.
 
-    This fixture ensures that `get_settings()` does not retain cached 
-    values between tests, preventing state leakage and ensuring each 
+    This fixture ensures that `get_settings()` does not retain cached
+    values between tests, preventing state leakage and ensuring each
     test runs with fresh settings.
 
     This fixture runs automatically for all tests.

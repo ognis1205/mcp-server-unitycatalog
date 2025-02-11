@@ -53,7 +53,7 @@ def test_cache(server: str, catalog: str, schema: str) -> None:
 def test_arguments(server: str, catalog: str, schema: str) -> None:
     """Tests that command-line arguments are correctly parsed into settings.
 
-    This test verifies that when command-line arguments are provided, 
+    This test verifies that when command-line arguments are provided,
     they are properly parsed and assigned to the corresponding settings attributes.
 
     Args:
