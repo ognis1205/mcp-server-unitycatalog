@@ -21,7 +21,9 @@ from pathlib import Path
 from .settings import get_settings as Settings
 
 
+# Defines logging format.
 FORMAT = "%(asctime)s,%(msecs)d - %(name)s - %(levelname)s - %(message)s"
+# Defines logging date format.
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 

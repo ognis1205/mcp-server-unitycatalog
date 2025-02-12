@@ -15,12 +15,27 @@ MIT License (c) 2025 Shingo Okawa
 
 import json
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, TypeAlias
-from mcp.types import Tool
+from typing import Any, Callable, Dict, List, Optional, Union, TypeAlias
+from mcp.types import (
+    TextContent,
+    ImageContent,
+    EmbeddedResource,
+    Tool,
+)
 from pydantic import BaseModel, Field
 from unitycatalog.ai.core.client import UnitycatalogFunctionClient
 from unitycatalog.client import FunctionInfo
 from .settings import get_settings as Settings
+
+
+class ListFunctions(BaseModel):
+    """Represents a request to list Unity Catalog Functions.
+
+    This model defines parameters for listing functions within a Unity Catalog
+    schema, allowing pagination and optional result limits.
+    """
+
+    pass
 
 
 class ListFunctions(BaseModel):
@@ -53,13 +68,17 @@ class ListFunctions(BaseModel):
     )
 
 
+# Represents MCP tool response content.
+Content: TypeAlias = Union[TextContent, ImageContent, EmbeddedResource]
 # Represents MCP tool implementations.
-UnityCatalogAiFunction: TypeAlias = Callable[[UnitycatalogFunctionClient, dict], Any]
+UnityCatalogAiFunction: TypeAlias = Callable[
+    [UnitycatalogFunctionClient, dict], List[Content]
+]
 
 
 def list_functions(
     client: UnitycatalogFunctionClient, arguments: dict
-) -> List[FunctionInfo]:
+) -> List[TextContent]:
     """Lists functions within the configured Unity Catalog catalog and schema.
 
     This function retrieves a list of functions from the Unity Catalog
@@ -73,11 +92,12 @@ def list_functions(
         list: A list of functions retrieved from Unity Catalog.
     """
     settings = Settings()
-    return json.dumps(
+    result = json.dumps(
         client.list_functions(
             catalog=settings.uc_catalog, schema=settings.uc_schema
         ).to_list()
     )
+    return [TextContent(type="text", text=result)]
 
 
 class UnityCatalogAiTool(BaseModel):
@@ -127,7 +147,7 @@ def list_tools() -> List[Tool]:
     ]
 
 
-def dispatch_tool(name: str) -> Optional[UnityCatalogAiFunction]:
+def dispatch_tool(name: str) -> Optional[UnityCatalogAiTool]:
     """Retrieves the Unity Catalog AI tool function by name.
 
     This function looks up and returns the corresponding function

@@ -11,7 +11,7 @@ MIT License (c) 2025 Shingo OKAWA
 """
 
 import logging
-from typing import Optional
+from typing import Optional, List
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import (
@@ -26,7 +26,11 @@ from unitycatalog.ai.core.utils.function_processing_utils import (
     get_tool_name,
 )
 from unitycatalog.client import ApiClient, Configuration
-from .tools import list_tools as list_ucai_tools, dispatch_tool as dispatch_ucai_tool
+from .tools import (
+    Content,
+    list_tools as list_ucai_tools,
+    dispatch_tool as dispatch_ucai_tool,
+)
 
 
 async def start(endpoint: str, catalog: str, schema: str) -> None:
@@ -49,7 +53,7 @@ async def start(endpoint: str, catalog: str, schema: str) -> None:
     )
 
     @server.list_tools()
-    async def list_tools() -> list[Tool]:
+    async def list_tools() -> List[Tool]:
         functions = client.list_functions(catalog=catalog, schema=schema)
         logger.debug(f"list_tools: {functions}")
         return [
@@ -64,12 +68,12 @@ async def start(endpoint: str, catalog: str, schema: str) -> None:
         ] + list_ucai_tools()
 
     @server.call_tool()
-    async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+    async def call_tool(name: str, arguments: dict) -> List[Content]:
         tool = dispatch_ucai_tool(name)
         if tool is not None:
-            result = tool.func(client, arguments)
-            logger.debug(f"call_tool: {result}")
-            return [TextContent(type="text", text=result)]
+            contents = tool.func(client, arguments)
+            logger.debug(f"call_tool: {contents}")
+            return contents
         else:
             result = client.execute_function(
                 function_name=f"{catalog}.{schema}.{name}",
