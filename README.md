@@ -25,8 +25,14 @@ Please note that mcp-server-unitycatalog is currently in early development. The 
 You can use **all Unity Catalog Functions registered in Unity Catalog** alongside the following predefined Unity Catalog AI tools:
 
 1. `uc_list_functions`
-   - List functions within the specified parent catalog and schema
+   - Lists functions within the specified parent catalog and schema
    - Returns: A list of functions retrieved from Unity Catalog
+
+2. `uc_get_function`
+   - Gets a function from within a parent catalog and schema
+   - Input:
+     - `name` (string): The name of the function (not fully-qualified)
+   - Returns: A function details retrieved from Unity Catalog
 
 ## Configuration
 

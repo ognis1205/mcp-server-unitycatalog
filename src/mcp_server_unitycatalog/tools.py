@@ -71,9 +71,10 @@ def _list_functions(
         arguments (dict): A dictionary of additional arguments (currently unused).
 
     Returns:
-        list: A list of functions retrieved from Unity Catalog.
+        List[TextContent]: A list of functions retrieved from Unity Catalog.
     """
     settings = Settings()
+    arguments = ListFunctions(**arguments)
     result = json.dumps(
         list(
             map(
@@ -90,23 +91,25 @@ def _list_functions(
 def _get_function(
     client: UnitycatalogFunctionClient, arguments: dict
 ) -> List[TextContent]:
-    """Lists functions within the configured Unity Catalog catalog and schema.
+    """Retrieves details of a specific Unity Catalog function.
 
-    This function retrieves a list of functions from the Unity Catalog
-    using the preconfigured catalog and schema settings.
+    This function queries the Unity Catalog for a function specified by
+    the provided arguments and returns its details as a JSON-formatted string.
 
     Args:
-        client (UnitycatalogFunctionClient): The client used to interact with Unity Catalog.
-        arguments (dict): A dictionary of additional arguments (currently unused).
+        client (UnitycatalogFunctionClient): The client used to interact with the Unity Catalog.
+        arguments (dict): A dictionary containing the function name.
 
     Returns:
-        list: A list of functions retrieved from Unity Catalog.
+        List[TextContent]: A list containing a single TextContent object
+        with the function details in JSON format.
     """
     settings = Settings()
+    arguments = GetFunction(**arguments)
     result = json.dumps(
         client.get_function(
-            name=f"{settings.uc_catalog}.{settings.uc_schema}.{arguments.name}",
-        )
+            function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{arguments.name}",
+        ).to_json()
     )
     return [TextContent(type="text", text=result)]
 
@@ -131,11 +134,16 @@ class UnityCatalogAiTool(BaseModel):
 # Enumeration of available Unity Catalog AI tools.
 UNITY_CATALOG_AI_TOOLS: Dict[str, UnityCatalogAiTool] = {
     "uc_list_functions": UnityCatalogAiTool(
-        description="List functions within the specified parent catalog and schema. "
+        description="List Unity Catalog Functions within the specified parent catalog and schema. "
         "There is no guarantee of a specific ordering of the elements in the array.",
         input_schema=ListFunctions.schema(),
         func=_list_functions,
-    )
+    ),
+    "uc_get_function": UnityCatalogAiTool(
+        description="Gets a Unity Catalog Function from within a parent catalog and schema.",
+        input_schema=GetFunction.schema(),
+        func=_get_function,
+    ),
 }
 
 
