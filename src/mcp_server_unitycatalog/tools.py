@@ -39,11 +39,14 @@ class ListFunctions(BaseModel):
 
 
 class GetFunction(BaseModel):
-    """ """
+    """Represents a request to retrieve details of a Unity Catalog function.
+
+    Attributes:
+        name (str): The name of the function (not fully-qualified).
+    """
 
     name: str = Field(
-        default=None,
-        description="Maximum number of functions to return.",
+        description="The name of the function (not fully-qualified).",
     )
 
 
@@ -79,6 +82,30 @@ def _list_functions(
                     catalog=settings.uc_catalog, schema=settings.uc_schema
                 ),
             )
+        )
+    )
+    return [TextContent(type="text", text=result)]
+
+
+def _get_function(
+    client: UnitycatalogFunctionClient, arguments: dict
+) -> List[TextContent]:
+    """Lists functions within the configured Unity Catalog catalog and schema.
+
+    This function retrieves a list of functions from the Unity Catalog
+    using the preconfigured catalog and schema settings.
+
+    Args:
+        client (UnitycatalogFunctionClient): The client used to interact with Unity Catalog.
+        arguments (dict): A dictionary of additional arguments (currently unused).
+
+    Returns:
+        list: A list of functions retrieved from Unity Catalog.
+    """
+    settings = Settings()
+    result = json.dumps(
+        client.get_function(
+            name=f"{settings.uc_catalog}.{settings.uc_schema}.{arguments.name}",
         )
     )
     return [TextContent(type="text", text=result)]
