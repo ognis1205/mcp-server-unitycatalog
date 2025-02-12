@@ -18,7 +18,7 @@ import sys
 from datetime import datetime
 from logging import FileHandler, Formatter, StreamHandler
 from pathlib import Path
-from .settings import get_settings
+from .settings import get_settings as Settings
 
 
 FORMAT = "%(asctime)s,%(msecs)d - %(name)s - %(levelname)s - %(message)s"
@@ -39,7 +39,7 @@ def configure(level: int) -> None:
         None
     """
     # Initializes logging directory.
-    settings = get_settings()
+    settings = Settings()
     log_directory = settings.uc_log_directory
     log_directory.mkdir(parents=True, exist_ok=True)
     # Configures file logger.

@@ -35,7 +35,7 @@ def main() -> None:
         "warn": logging.WARN,
         "error": logging.ERROR,
         "critical": logging.CRITICAL,
-    }[settings.uc_verbosity]
+    }.get(settings.uc_verbosity, logging.INFO)
     configure_logging(level)
     asyncio.run(
         start_server(

@@ -13,10 +13,14 @@ License:
 MIT License (c) 2025 Shingo Okawa
 """
 
+import json
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Callable, Dict, List, Optional, TypeAlias
 from mcp.types import Tool
 from pydantic import BaseModel, Field
+from unitycatalog.ai.core.client import UnitycatalogFunctionClient
+from unitycatalog.client import FunctionInfo
+from .settings import get_settings as Settings
 
 
 class ListFunctions(BaseModel):
@@ -49,28 +53,62 @@ class ListFunctions(BaseModel):
     )
 
 
-class UnityCatalogAiTools(Enum):
-    """Enumeration of available Unity Catalog AI tools.
+# Represents MCP tool implementations.
+UnityCatalogAiFunction: TypeAlias = Callable[[UnitycatalogFunctionClient, dict], Any]
 
-    This Enum defines various tools for interacting with Unity Catalog,
-    including listing functions and other potential operations.
 
-    Attributes:
-        LIST_FUNCTIONS (tuple): A tool for listing functions within a specified catalog and schema.
-            - Name: "list_functions"
-            - Description: Lists functions under the given catalog and schema with no guaranteed order.
-            - Model: ListFunctions (Defines the expected request parameters.)
+def list_functions(
+    client: UnitycatalogFunctionClient, arguments: dict
+) -> List[FunctionInfo]:
+    """Lists functions within the configured Unity Catalog catalog and schema.
+
+    This function retrieves a list of functions from the Unity Catalog
+    using the preconfigured catalog and schema settings.
+
+    Args:
+        client (UnitycatalogFunctionClient): The client used to interact with Unity Catalog.
+        arguments (dict): A dictionary of additional arguments (currently unused).
+
+    Returns:
+        list: A list of functions retrieved from Unity Catalog.
     """
-
-    LIST_FUNCTIONS = (
-        "list_functions",
-        "List functions within the specified parent catalog and schema. "
-        "There is no guarantee of a specific ordering of the elements in the array.",
-        ListFunctions,
+    settings = Settings()
+    return json.dumps(
+        client.list_functions(
+            catalog=settings.uc_catalog, schema=settings.uc_schema
+        ).to_list()
     )
 
 
-def list_unity_catalog_ai_tools() -> List[Tool]:
+class UnityCatalogAiTool(BaseModel):
+    """Represents a Unity Catalog AI tool.
+
+    This dictionary structure defines the metadata and execution function for a Unity Catalog AI tool.
+
+    Attributes:
+        name (str): The name of the tool.
+        description (str): A brief description of the tool's purpose.
+        input_schema (str): The JSON schema representing the expected input format.
+        func (UnityCatalogAiFunction): The callable function implementing the tool's behavior.
+    """
+
+    description: str
+    input_schema: Dict
+    func: UnityCatalogAiFunction
+
+
+# Enumeration of available Unity Catalog AI tools.
+UNITY_CATALOG_AI_TOOLS: Dict[str, UnityCatalogAiTool] = {
+    "uc_list_functions": UnityCatalogAiTool(
+        description="List functions within the specified parent catalog and schema. "
+        "There is no guarantee of a specific ordering of the elements in the array.",
+        input_schema=ListFunctions.schema(),
+        func=list_functions,
+    )
+}
+
+
+def list_tools() -> List[Tool]:
     """Returns a list of available Unity Catalog AI tools.
 
     This function generates a list of `Tool` instances based on the `UnityCatalogAiTools`
@@ -82,10 +120,24 @@ def list_unity_catalog_ai_tools() -> List[Tool]:
     return [
         Tool(
             name=name,
-            description=description,
-            inputSchema=model.schema(),
+            description=tool.description,
+            inputSchema=tool.input_schema,
         )
-        for name, description, model in list(
-            map(lambda x: x.value, UnityCatalogAiTools)
-        )
+        for name, tool in UNITY_CATALOG_AI_TOOLS.items()
     ]
+
+
+def dispatch_tool(name: str) -> Optional[UnityCatalogAiFunction]:
+    """Retrieves the Unity Catalog AI tool function by name.
+
+    This function looks up and returns the corresponding function
+    for a given tool name from the `UNITY_CATALOG_AI_TOOLS` registry.
+
+    Args:
+        name (str): The name of the Unity Catalog AI tool.
+
+    Returns:
+        Optional[UnityCatalogAiFunction]: The function corresponding to
+        the specified tool name if found, otherwise `None`.
+    """
+    return UNITY_CATALOG_AI_TOOLS.get(name)

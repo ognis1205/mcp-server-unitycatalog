@@ -12,6 +12,7 @@
 - [ ] Add Docker image.
 - [ ] Consider implementing minimal data clean room support.
 - [ ] Implement `use_xxx` methods. In the current implementation, `catalog` and `schema` need to be defined when starting the server. However, they will be implemented as `use_catalog` and `use_schema` functions, dynamically updating the list of available functions when the `use_xxx` is executed.
+- [ ] Consider unified tool returned type interface.
 
 ## Overview
 

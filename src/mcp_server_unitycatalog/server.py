@@ -26,7 +26,7 @@ from unitycatalog.ai.core.utils.function_processing_utils import (
     get_tool_name,
 )
 from unitycatalog.client import ApiClient, Configuration
-from .tools import list_unity_catalog_ai_tools
+from .tools import list_tools as list_ucai_tools, dispatch_tool as dispatch_ucai_tool
 
 
 async def start(endpoint: str, catalog: str, schema: str) -> None:
@@ -61,16 +61,22 @@ async def start(endpoint: str, catalog: str, schema: str) -> None:
                 ).pydantic_model.schema(),
             )
             for func in functions.to_list()
-        ] + list_unity_catalog_ai_tools()
+        ] + list_ucai_tools()
 
     @server.call_tool()
     async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-        result = client.execute_function(
-            function_name=f"{catalog}.{schema}.{name}",
-            parameters=arguments,
-        )
-        logger.debug(f"call_tool: {result}")
-        return [TextContent(type="text", text=result.to_json())]
+        tool = dispatch_ucai_tool(name)
+        if tool is not None:
+            result = tool.func(client, arguments)
+            logger.debug(f"call_tool: {result}")
+            return [TextContent(type="text", text=result)]
+        else:
+            result = client.execute_function(
+                function_name=f"{catalog}.{schema}.{name}",
+                parameters=arguments,
+            )
+            logger.debug(f"call_tool: {result}")
+            return [TextContent(type="text", text=result.to_json())]
 
     options = server.create_initialization_options()
     async with stdio_server() as (read_stream, write_stream):
