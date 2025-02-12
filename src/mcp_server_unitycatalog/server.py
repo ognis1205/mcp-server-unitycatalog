@@ -55,7 +55,6 @@ async def start(endpoint: str, catalog: str, schema: str) -> None:
     @server.list_tools()
     async def list_tools() -> List[Tool]:
         functions = client.list_functions(catalog=catalog, schema=schema)
-        logger.debug(f"list_tools: {functions}")
         return [
             Tool(
                 name=func.name,
@@ -71,9 +70,7 @@ async def start(endpoint: str, catalog: str, schema: str) -> None:
     async def call_tool(name: str, arguments: dict) -> List[Content]:
         tool = dispatch_ucai_tool(name)
         if tool is not None:
-            contents = tool.func(client, arguments)
-            logger.debug(f"call_tool: {contents}")
-            return contents
+            return tool.func(client, arguments)
         else:
             result = client.execute_function(
                 function_name=f"{catalog}.{schema}.{name}",

@@ -14,6 +14,7 @@ MIT License (c) 2025 Shingo Okawa
 """
 
 import json
+import logging
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union, TypeAlias
 from mcp.types import (
@@ -23,9 +24,14 @@ from mcp.types import (
     Tool,
 )
 from pydantic import BaseModel, Field
+from pydantic.json import pydantic_encoder
 from unitycatalog.ai.core.client import UnitycatalogFunctionClient
 from unitycatalog.client import FunctionInfo
 from .settings import get_settings as Settings
+
+
+# The logger instance for this module.
+LOGGER = logging.getLogger(__name__)
 
 
 class ListFunctions(BaseModel):
@@ -58,6 +64,27 @@ UnityCatalogAiFunction: TypeAlias = Callable[
 ]
 
 
+def _model_dump_json(model_or_list: Union[BaseModel, List[BaseModel]]) -> str:
+    """Serializes a Pydantic model or a list of Pydantic models into a JSON string.
+
+    This function ensures proper serialization using Pydantic's encoding utilities,
+    handling both single model instances and lists of models.
+
+    Args:
+        model_or_list (Union[BaseModel, List[BaseModel]]): A Pydantic model instance
+            or a list of Pydantic models to be serialized.
+
+    Returns:
+        str: A JSON-formatted string representation of the input model or list.
+    """
+    if isinstance(model_or_list, list):
+        return json.dumps(
+            model_or_list, default=pydantic_encoder, separators=(",", ":")
+        )
+    else:
+        return model_or_list.model_dump_json(by_alias=True, exclude_unset=True)
+
+
 def _list_functions(
     client: UnitycatalogFunctionClient, arguments: dict
 ) -> List[TextContent]:
@@ -73,19 +100,18 @@ def _list_functions(
     Returns:
         List[TextContent]: A list of functions retrieved from Unity Catalog.
     """
-    settings = Settings()
-    arguments = ListFunctions(**arguments)
-    result = json.dumps(
-        list(
-            map(
-                lambda f: f.to_json(),
-                client.list_functions(
-                    catalog=settings.uc_catalog, schema=settings.uc_schema
-                ),
-            )
-        )
+    settings, arguments = Settings(), ListFunctions(**arguments)
+    LOGGER.info(f"uc_list_functions: arguments: {_model_dump_json(arguments)}")
+    content = _model_dump_json(
+        client.list_functions(catalog=settings.uc_catalog, schema=settings.uc_schema)
     )
-    return [TextContent(type="text", text=result)]
+    LOGGER.info(f"uc_list_functions: content: {content}")
+    return [
+        TextContent(
+            type="text",
+            text=content,
+        )
+    ]
 
 
 def _get_function(
@@ -104,14 +130,20 @@ def _get_function(
         List[TextContent]: A list containing a single TextContent object
         with the function details in JSON format.
     """
-    settings = Settings()
-    arguments = GetFunction(**arguments)
-    result = json.dumps(
+    settings, arguments = Settings(), GetFunction(**arguments)
+    LOGGER.info(f"uc_get_function: arguments: {_model_dump_json(arguments)}")
+    content = _model_dump_json(
         client.get_function(
             function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{arguments.name}",
-        ).to_json()
+        )
     )
-    return [TextContent(type="text", text=result)]
+    LOGGER.info(f"uc_get_function: content: {content}")
+    return [
+        TextContent(
+            type="text",
+            text=content,
+        )
+    ]
 
 
 class UnityCatalogAiTool(BaseModel):
