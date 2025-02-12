@@ -26,6 +26,7 @@ from unitycatalog.ai.core.utils.function_processing_utils import (
     get_tool_name,
 )
 from unitycatalog.client import ApiClient, Configuration
+from .tools import list_unity_catalog_ai_tools
 
 
 async def start(endpoint: str, catalog: str, schema: str) -> None:
@@ -60,7 +61,7 @@ async def start(endpoint: str, catalog: str, schema: str) -> None:
                 ).pydantic_model.schema(),
             )
             for func in functions.to_list()
-        ]
+        ] + list_unity_catalog_ai_tools()
 
     @server.call_tool()
     async def call_tool(name: str, arguments: dict) -> list[TextContent]:

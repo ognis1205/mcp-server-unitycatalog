@@ -12,7 +12,7 @@ import os
 import random
 import string
 import pytest
-from mcp_server_unitycatalog.settings import get_settings
+from mcp_server_unitycatalog.settings import Settings, get_settings
 
 
 def _random_alpha_num(length: int) -> str:
@@ -95,4 +95,5 @@ def setup_function():
     Returns:
         None
     """
+    Settings.model_config["env_file"] = ""
     get_settings.cache_clear()

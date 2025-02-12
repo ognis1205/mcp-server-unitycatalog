@@ -11,6 +11,7 @@
 - [ ] Make the codebase more concise and versatile.
 - [ ] Add Docker image.
 - [ ] Consider implementing minimal data clean room support.
+- [ ] Implement `use_xxx` methods. In the current implementation, `catalog` and `schema` need to be defined when starting the server. However, they will be implemented as `use_catalog` and `use_schema` functions, dynamically updating the list of available functions when the `use_xxx` is executed.
 
 ## Overview
 
@@ -59,6 +60,36 @@ If you are doing local development, test your changes as follows:
         "--uc_schema",
         "<your schema name>"
       ]
+    }
+  }
+}
+```
+
+If you are using a runtime version manager, such as `asdf`, the configuration file may look like this:
+
+```json
+{
+  "mcpServers": {
+    "unitycatalog": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/<path to your local git repository>/mcp-server-unitycatalog",
+        "run",
+        "mcp-server-unitycatalog",
+        "--uc_server",
+        "<your unity catalog url>",
+        "--uc_catalog",
+        "<your catalog name>",
+        "--uc_schema",
+        "<your schema name>"
+      ],
+      "env": {
+        "PATH": "/<path to your asdf installation>/.asdf/shims:/usr/bin:/bin",
+        "ASDF_DIR": "/<path to your asdf installation>/.asdf",
+        "ASDF_DATA_DIR": "/<path to your asdf installation>/.asdf",
+        "ASDF_UV_VERSION": "<your uv version>"
+      }
     }
   }
 }

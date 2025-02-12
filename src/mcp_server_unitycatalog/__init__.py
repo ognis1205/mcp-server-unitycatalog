@@ -11,9 +11,9 @@ import logging
 import sys
 from traceback import format_exc
 from pydantic.networks import AnyHttpUrl
-from .loggings import configure as logging_configure
-from .settings import get_settings
-from .server import start
+from .loggings import configure as configure_logging
+from .settings import get_settings as Settings
+from .server import start as start_server
 
 
 def main() -> None:
@@ -28,7 +28,7 @@ def main() -> None:
     """
     import asyncio
 
-    settings = get_settings()
+    settings = Settings()
     level = {
         "debug": logging.DEBUG,
         "info": logging.INFO,
@@ -36,9 +36,9 @@ def main() -> None:
         "error": logging.ERROR,
         "critical": logging.CRITICAL,
     }[settings.uc_verbosity]
-    logging_configure(level)
+    configure_logging(level)
     asyncio.run(
-        start(
+        start_server(
             endpoint=f"{settings.uc_server}/api/2.1/unity-catalog",
             catalog=settings.uc_catalog,
             schema=settings.uc_schema,

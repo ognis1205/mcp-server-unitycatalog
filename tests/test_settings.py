@@ -14,7 +14,10 @@ MIT License (c) 2025 Shingo OKAWA
 """
 
 import os
+import random
 import sys
+import pytest
+from pydantic import ValidationError
 from unittest.mock import patch
 from mcp_server_unitycatalog.settings import get_settings
 
@@ -51,10 +54,11 @@ def test_cache(server: str, catalog: str, schema: str) -> None:
 
 
 def test_arguments(server: str, catalog: str, schema: str) -> None:
-    """Tests that command-line arguments are correctly parsed into settings.
+    """Tests that missing required command-line arguments raise a ValidationError.
 
-    This test verifies that when command-line arguments are provided,
-    they are properly parsed and assigned to the corresponding settings attributes.
+    This test ensures that if any of the required arguments (`--uc_server`,
+    `--uc_catalog`, or `--uc_schema`) are missing from the command line input,
+    the configuration validation fails as expected.
 
     Args:
         server (str): The Unity Catalog server URL.
@@ -62,9 +66,7 @@ def test_arguments(server: str, catalog: str, schema: str) -> None:
         schema (str): The schema name within the catalog.
 
     Asserts:
-        - `settings.uc_server` matches the provided `server`.
-        - `settings.uc_catalog` matches the provided `catalog`.
-        - `settings.uc_schema` matches the provided `schema`.
+        - A `ValidationError` is raised when one of the required arguments is missing.
     """
     argv = [
         "mcp-server-unitycatalog",
@@ -80,3 +82,18 @@ def test_arguments(server: str, catalog: str, schema: str) -> None:
         assert settings.uc_server == server
         assert settings.uc_catalog == catalog
         assert settings.uc_schema == schema
+
+
+def test_required_arguments(server: str, catalog: str, schema: str) -> None:
+    """"""
+    argv = random.choice(
+        [
+            ["mcp-server-unitycatalog", "--uc_catalog", catalog, "--uc_schema", schema],
+            ["mcp-server-unitycatalog", "--uc_server", server, "--uc_schema", schema],
+            ["mcp-server-unitycatalog", "--uc_server", server, "--uc_catalog", catalog],
+        ]
+    )
+    with patch.object(sys, "argv", argv):
+        with pytest.raises(ValidationError) as exc_info:
+            settings = get_settings()
+        assert "Field required" in str(exc_info.value)
