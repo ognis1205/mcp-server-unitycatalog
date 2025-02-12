@@ -70,7 +70,7 @@ async def start(endpoint: str, catalog: str, schema: str) -> None:
     async def call_tool(name: str, arguments: dict) -> List[Content]:
         tool = dispatch_ucai_tool(name)
         if tool is not None:
-            return tool.func(client, arguments)
+            return tool.func(server.request_context, client, arguments)
         else:
             result = client.execute_function(
                 function_name=f"{catalog}.{schema}.{name}",

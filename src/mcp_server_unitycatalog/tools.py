@@ -13,10 +13,14 @@ License:
 MIT License (c) 2025 Shingo Okawa
 """
 
+import ast
+import asyncio
 import json
 import logging
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union, TypeAlias
+from mcp.shared.context import RequestContext
+from mcp.server.session import ServerSession
 from mcp.types import (
     TextContent,
     ImageContent,
@@ -56,11 +60,30 @@ class GetFunction(BaseModel):
     )
 
 
+class CreateFunction(BaseModel):
+    """Represents a request to create a new function in Unity Catalog.
+
+    This model is used to define the parameters required for registering
+    a Python function within Unity Catalog.
+
+    Attributes:
+        name (str): The name of the function to be registered.
+        script (str): The Python script containing the function definition.
+    """
+
+    name: str = Field(
+        description="The name of the function to be registered in the given script.",
+    )
+    script: str = Field(
+        description="The Python script including the function to be registered.",
+    )
+
+
 # Represents MCP tool response content.
 Content: TypeAlias = Union[TextContent, ImageContent, EmbeddedResource]
 # Represents MCP tool implementations.
 UnityCatalogAiFunction: TypeAlias = Callable[
-    [UnitycatalogFunctionClient, dict], List[Content]
+    [RequestContext[ServerSession], UnitycatalogFunctionClient, dict], List[Content]
 ]
 
 
@@ -86,7 +109,9 @@ def _model_dump_json(model_or_list: Union[BaseModel, List[BaseModel]]) -> str:
 
 
 def _list_functions(
-    client: UnitycatalogFunctionClient, arguments: dict
+    context: RequestContext[ServerSession],
+    client: UnitycatalogFunctionClient,
+    arguments: dict,
 ) -> List[TextContent]:
     """Lists functions within the configured Unity Catalog catalog and schema.
 
@@ -94,6 +119,7 @@ def _list_functions(
     using the preconfigured catalog and schema settings.
 
     Args:
+        context (RequestContext[ServerSession]): The request context with session details.
         client (UnitycatalogFunctionClient): The client used to interact with Unity Catalog.
         arguments (dict): A dictionary of additional arguments (currently unused).
 
@@ -115,7 +141,9 @@ def _list_functions(
 
 
 def _get_function(
-    client: UnitycatalogFunctionClient, arguments: dict
+    context: RequestContext[ServerSession],
+    client: UnitycatalogFunctionClient,
+    arguments: dict,
 ) -> List[TextContent]:
     """Retrieves details of a specific Unity Catalog function.
 
@@ -123,6 +151,7 @@ def _get_function(
     the provided arguments and returns its details as a JSON-formatted string.
 
     Args:
+        context (RequestContext[ServerSession]): The request context with session details.
         client (UnitycatalogFunctionClient): The client used to interact with the Unity Catalog.
         arguments (dict): A dictionary containing the function name.
 
@@ -138,6 +167,70 @@ def _get_function(
         )
     )
     LOGGER.info(f"uc_get_function: content: {content}")
+    return [
+        TextContent(
+            type="text",
+            text=content,
+        )
+    ]
+
+
+def _extract_function(script: str, func_name: str) -> Optional[str]:
+    """Extracts the source code of a function with the specified name from a given Python script.
+
+    This function parses the provided script, searches for a function definition
+    that matches the given name, and returns its source code as a string.
+
+    Args:
+        script (str): The Python script containing function definitions.
+        func_name (str): The name of the function to extract.
+
+    Returns:
+        Optional[str]: The extracted function source code as a string if found, otherwise None.
+    """
+    tree = ast.parse(script)
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == func_name:
+            return ast.unparse(node)
+    return None
+
+
+def _create_function(
+    context: RequestContext[ServerSession],
+    client: UnitycatalogFunctionClient,
+    arguments: dict,
+) -> List[TextContent]:
+    """Creates a new Python function in Unity Catalog based on the provided script.
+
+    This function extracts a specified function from the given script,
+    registers it in Unity Catalog, and notifies the session of changes.
+
+    Args:
+        context (RequestContext[ServerSession]): The request context with session details.
+        client (UnitycatalogFunctionClient): The client for interacting with Unity Catalog.
+        arguments (dict): A dictionary containing:
+            - "name" (str): The function name to register.
+            - "script" (str): The Python script containing the function definition.
+
+    Returns:
+        List[TextContent]: A list containing the JSON response of the created function.
+    """
+    settings, arguments = Settings(), CreateFunction(**arguments)
+    LOGGER.info(f"uc_create_function: arguments: {_model_dump_json(arguments)}")
+    #    namespace = {}
+    #    exec(_extract_function(arguments.script, arguments.name), namespace)
+    #    exec(_extract_function(arguments.script, arguments.name))
+    #    func = locals().get(arguments.name)
+    #    content = _model_dump_json(
+    #        client.create_python_function(
+    #            catalog=settings.uc_catalog,
+    #            schema=settings.uc_schema,
+    #            func=func,
+    #        )
+    #    )
+    content = ""
+    asyncio.run(context.session.send_tool_list_changed())
+    LOGGER.info(f"uc_create_function: content: {content}")
     return [
         TextContent(
             type="text",
@@ -175,6 +268,12 @@ UNITY_CATALOG_AI_TOOLS: Dict[str, UnityCatalogAiTool] = {
         description="Gets a Unity Catalog Function from within a parent catalog and schema.",
         input_schema=GetFunction.schema(),
         func=_get_function,
+    ),
+    "uc_create_function": UnityCatalogAiTool(
+        description="Creates a Unity Catalog function. WARNING: This API is experimental and will "
+        "change in future versions.",
+        input_schema=CreateFunction.schema(),
+        func=_create_function,
     ),
 }
 

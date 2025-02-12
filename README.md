@@ -6,6 +6,8 @@
 
 ## TODO
 
+- [x] Implement support for `list_functions`.
+- [x] Implement support for `get_functions`.
 - [ ] Implement support for `create_python_function`.
 - [ ] Implement catalog explorer tools.
 - [ ] Add Docker image.
