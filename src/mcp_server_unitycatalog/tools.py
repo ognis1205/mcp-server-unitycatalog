@@ -38,33 +38,12 @@ class ListFunctions(BaseModel):
     pass
 
 
-class ListFunctions(BaseModel):
-    """Represents a request to list Unity Catalog Functions.
+class GetFunction(BaseModel):
+    """ """
 
-    This model defines parameters for listing functions within a Unity Catalog
-    schema, allowing pagination and optional result limits.
-
-    Attributes:
-        max_results (Optional[int]): Maximum number of functions to return.
-            If not set, all available functions may be returned.
-        page_token (Optional[str]): Opaque pagination token used to retrieve
-            the next page of results based on a previous query.
-        timeout (Optional[float]): Maximum time (in seconds) to wait for the
-            request to complete.
-    """
-
-    max_results: Optional[int] = Field(
+    name: str = Field(
         default=None,
         description="Maximum number of functions to return.",
-    )
-    page_token: Optional[str] = Field(
-        default=None,
-        description="Opaque pagination token to go to next "
-        "page based on previous query.",
-    )
-    timeout: Optional[float] = Field(
-        default=None,
-        description="maximum time (in seconds) to wait for the request to complete.",
     )
 
 
@@ -76,7 +55,7 @@ UnityCatalogAiFunction: TypeAlias = Callable[
 ]
 
 
-def list_functions(
+def _list_functions(
     client: UnitycatalogFunctionClient, arguments: dict
 ) -> List[TextContent]:
     """Lists functions within the configured Unity Catalog catalog and schema.
@@ -93,9 +72,14 @@ def list_functions(
     """
     settings = Settings()
     result = json.dumps(
-        client.list_functions(
-            catalog=settings.uc_catalog, schema=settings.uc_schema
-        ).to_list()
+        list(
+            map(
+                lambda f: f.to_json(),
+                client.list_functions(
+                    catalog=settings.uc_catalog, schema=settings.uc_schema
+                ),
+            )
+        )
     )
     return [TextContent(type="text", text=result)]
 
@@ -123,7 +107,7 @@ UNITY_CATALOG_AI_TOOLS: Dict[str, UnityCatalogAiTool] = {
         description="List functions within the specified parent catalog and schema. "
         "There is no guarantee of a specific ordering of the elements in the array.",
         input_schema=ListFunctions.schema(),
-        func=list_functions,
+        func=_list_functions,
     )
 }
 
