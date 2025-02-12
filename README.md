@@ -8,7 +8,7 @@
 
 - [x] Implement support for `list_functions`.
 - [x] Implement support for `get_functions`.
-- [ ] Implement support for `create_python_function`.
+- [x] Implement support for `create_python_function`.
 - [ ] Implement catalog explorer tools.
 - [ ] Add Docker image.
 - [ ] Consider implementing minimal data clean room support.
@@ -25,14 +25,21 @@ Please note that mcp-server-unitycatalog is currently in early development. The 
 You can use **all Unity Catalog Functions registered in Unity Catalog** alongside the following predefined Unity Catalog AI tools:
 
 1. `uc_list_functions`
-   - Lists functions within the specified parent catalog and schema
-   - Returns: A list of functions retrieved from Unity Catalog
+   - Lists functions within the specified parent catalog and schema.
+   - Returns: A list of functions retrieved from Unity Catalog.
 
 2. `uc_get_function`
-   - Gets a function from within a parent catalog and schema
+   - Gets a function within a parent catalog and schema.
    - Input:
-     - `name` (string): The name of the function (not fully-qualified)
-   - Returns: A function details retrieved from Unity Catalog
+     - `name` (string): The name of the function (not fully-qualified).
+   - Returns: A function details retrieved from Unity Catalog.
+
+3. `uc_create_function`
+   - Create a function within a parent catalog and schema. WARNING: This API is experimental and will change in future versions.
+   - Input:
+     - `name` (string): The name of the function (not fully-qualified).
+     - `script` (string): The Python script including the function to be registered.
+   - Returns: A function details created within Unity Catalog.
 
 ## Configuration
 

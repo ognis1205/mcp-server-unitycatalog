@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field
 from pydantic.json import pydantic_encoder
 from unitycatalog.ai.core.client import UnitycatalogFunctionClient
 from unitycatalog.client import FunctionInfo
+from .contexts import tempmodule
 from .settings import get_settings as Settings
 
 
@@ -175,26 +176,6 @@ def _get_function(
     ]
 
 
-def _extract_function(script: str, func_name: str) -> Optional[str]:
-    """Extracts the source code of a function with the specified name from a given Python script.
-
-    This function parses the provided script, searches for a function definition
-    that matches the given name, and returns its source code as a string.
-
-    Args:
-        script (str): The Python script containing function definitions.
-        func_name (str): The name of the function to extract.
-
-    Returns:
-        Optional[str]: The extracted function source code as a string if found, otherwise None.
-    """
-    tree = ast.parse(script)
-    for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and node.name == func_name:
-            return ast.unparse(node)
-    return None
-
-
 def _create_function(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
@@ -217,18 +198,15 @@ def _create_function(
     """
     settings, arguments = Settings(), CreateFunction(**arguments)
     LOGGER.info(f"uc_create_function: arguments: {_model_dump_json(arguments)}")
-    #    namespace = {}
-    #    exec(_extract_function(arguments.script, arguments.name), namespace)
-    #    exec(_extract_function(arguments.script, arguments.name))
-    #    func = locals().get(arguments.name)
-    #    content = _model_dump_json(
-    #        client.create_python_function(
-    #            catalog=settings.uc_catalog,
-    #            schema=settings.uc_schema,
-    #            func=func,
-    #        )
-    #    )
-    content = ""
+    with tempmodule(arguments.script) as module:
+        func = getattr(module, arguments.name)
+        content = _model_dump_json(
+            client.create_python_function(
+                catalog=settings.uc_catalog,
+                schema=settings.uc_schema,
+                func=func,
+            )
+        )
     asyncio.run(context.session.send_tool_list_changed())
     LOGGER.info(f"uc_create_function: content: {content}")
     return [
@@ -245,15 +223,20 @@ class UnityCatalogAiTool(BaseModel):
     This dictionary structure defines the metadata and execution function for a Unity Catalog AI tool.
 
     Attributes:
-        name (str): The name of the tool.
         description (str): A brief description of the tool's purpose.
         input_schema (str): The JSON schema representing the expected input format.
         func (UnityCatalogAiFunction): The callable function implementing the tool's behavior.
     """
 
-    description: str
-    input_schema: Dict
-    func: UnityCatalogAiFunction
+    description: str = Field(
+        description="A brief description of the tool's purpose.",
+    )
+    input_schema: Dict = Field(
+        description="The JSON schema representing the expected input format.",
+    )
+    func: UnityCatalogAiFunction = Field(
+        description="The callable function implementing the tool's behavior.",
+    )
 
 
 # Enumeration of available Unity Catalog AI tools.
