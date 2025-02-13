@@ -11,7 +11,7 @@ import logging
 import sys
 from traceback import format_exc
 from pydantic.networks import AnyHttpUrl
-from .loggings import configure as configure_logging
+from .logging import configure as configure_logging
 from .settings import get_settings as Settings
 from .server import start as start_server
 

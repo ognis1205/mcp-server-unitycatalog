@@ -14,11 +14,6 @@ import logging
 from typing import Optional, List
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import (
-    TextContent,
-    Tool,
-)
-from pydantic import BaseModel
 from pydantic.networks import AnyHttpUrl
 from unitycatalog.ai.core.client import UnitycatalogFunctionClient
 from unitycatalog.client import ApiClient, Configuration

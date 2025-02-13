@@ -7,7 +7,7 @@
 ## TODO
 
 - [x] Implement support for `list_functions`.
-- [x] Implement support for `get_functions`.
+- [x] Implement support for `get_function`.
 - [x] Implement support for `create_python_function`.
 - [x] Implement support for `execute_function`.
 - [ ] Implement semantic catalog explorer tools.

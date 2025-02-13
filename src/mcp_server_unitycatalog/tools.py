@@ -13,11 +13,9 @@ License:
 MIT License (c) 2025 Shingo Okawa
 """
 
-import ast
 import asyncio
 import json
 import logging
-from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union, TypeAlias
 from mcp.shared.context import RequestContext
 from mcp.server.session import ServerSession
@@ -34,7 +32,7 @@ from unitycatalog.ai.core.utils.function_processing_utils import (
     generate_function_input_params_schema,
 )
 from unitycatalog.client import FunctionInfo
-from .contexts import tempmodule
+from .context import tempmodule
 from .settings import get_settings as Settings
 
 
