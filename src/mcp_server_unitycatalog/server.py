@@ -14,6 +14,7 @@ import logging
 from typing import Optional, List
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
+from mcp.types import Tool
 from pydantic.networks import AnyHttpUrl
 from unitycatalog.ai.core.client import UnitycatalogFunctionClient
 from unitycatalog.client import ApiClient, Configuration
@@ -61,6 +62,6 @@ async def start(endpoint: str, catalog: str, schema: str) -> None:
             return execute_function(client, name, arguments)
 
     options = server.create_initialization_options()
-    LOGGER.info("start listening: options: {options}")
+    LOGGER.info(f"start serving: options: {options}")
     async with stdio_server() as (read_stream, write_stream):
         await server.run(read_stream, write_stream, options, raise_exceptions=True)

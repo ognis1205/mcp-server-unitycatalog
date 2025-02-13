@@ -197,6 +197,10 @@ def _create_function(
     """
     settings, arguments = Settings(), CreateFunction(**arguments)
     LOGGER.info(f"uc_create_function: arguments: {_model_dump_json(arguments)}")
+    # NOTE:
+    # inspect.getsourcelines expects the argument to be a Python object defined in an actual
+    # source file, meaning it does not work for objects that exist only in memory.
+    # Hence, we provided a context manager responsible for handling temporary module creation.
     with tempmodule(arguments.script) as module:
         func = getattr(module, arguments.name)
         content = _model_dump_json(

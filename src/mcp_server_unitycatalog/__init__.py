@@ -10,8 +10,7 @@ MIT License (c) 2025 Shingo OKAWA
 import logging
 import sys
 from traceback import format_exc
-from pydantic.networks import AnyHttpUrl
-from .logging import configure as configure_logging
+from .log import configure as configure_logging
 from .settings import get_settings as Settings
 from .server import start as start_server
 
