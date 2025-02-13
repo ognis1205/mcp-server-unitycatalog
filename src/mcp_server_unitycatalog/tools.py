@@ -81,6 +81,21 @@ class CreateFunction(BaseModel):
     )
 
 
+class DeleteFunction(BaseModel):
+    """Represents a request to delete a function in Unity Catalog.
+
+    This model is used to define the parameters required for deleting
+    a Python function within Unity Catalog.
+
+    Attributes:
+        name (str): The name of the function to be deleted.
+    """
+
+    name: str = Field(
+        description="The name of the function to be deleted.",
+    )
+
+
 # Represents MCP tool response content.
 Content: TypeAlias = Union[TextContent, ImageContent, EmbeddedResource]
 # Represents MCP tool implementations.
@@ -89,20 +104,22 @@ UnityCatalogAiFunction: TypeAlias = Callable[
 ]
 
 
-def _model_dump_json(maybe_model: Union[BaseModel, List[BaseModel], Dict]) -> str:
+def _model_dump_json(maybe_model: Union[BaseModel, List[BaseModel], Dict, None]) -> str:
     """Serializes a Pydantic model or a list of Pydantic models into a JSON string.
 
     This function ensures proper serialization using Pydantic's encoding utilities,
     handling both single model instances and lists of models.
 
     Args:
-        model_or_list (Union[BaseModel, List[BaseModel]]): A Pydantic model instance
-            or a list of Pydantic models to be serialized.
+        maybe_model (Union[BaseModel, List[BaseModel], Dict, None]): A Pydantic model instance
+            or a list, a dict of Pydantic models to be serialized.
 
     Returns:
         str: A JSON-formatted string representation of the input model or list.
     """
-    if isinstance(maybe_model, list) or isinstance(maybe_model, dict):
+    if maybe_model is None:
+        return ""
+    elif isinstance(maybe_model, list) or isinstance(maybe_model, dict):
         return json.dumps(maybe_model, default=pydantic_encoder, separators=(",", ":"))
     else:
         return maybe_model.model_dump_json(by_alias=True, exclude_unset=True)
@@ -220,6 +237,41 @@ def _create_function(
     ]
 
 
+def _delete_function(
+    context: RequestContext[ServerSession],
+    client: UnitycatalogFunctionClient,
+    arguments: dict,
+) -> List[TextContent]:
+    """Deletes a function from Unity Catalog.
+
+    This function removes a registered function from the Unity Catalog,
+    and notifies the session that the available tools list has changed.
+
+    Args:
+        context (RequestContext[ServerSession]): The request context, which manages the session state.
+        client (UnitycatalogFunctionClient): The client used to interact with Unity Catalog.
+        arguments (dict): A dictionary containing the function name to be deleted.
+
+    Returns:
+        List[TextContent]: A list containing the deletion result as a text response.
+    """
+    settings, arguments = Settings(), DeleteFunction(**arguments)
+    LOGGER.info(f"uc_delete_function: arguments: {_model_dump_json(arguments)}")
+    content = _model_dump_json(
+        client.delete_function(
+            function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{arguments.name}",
+        )
+    )
+    asyncio.run(context.session.send_tool_list_changed())
+    LOGGER.info(f"uc_delete_function: content: {content}")
+    return [
+        TextContent(
+            type="text",
+            text=content,
+        )
+    ]
+
+
 class UnityCatalogAiTool(BaseModel):
     """Represents a Unity Catalog AI tool.
 
@@ -260,6 +312,11 @@ UNITY_CATALOG_AI_TOOLS: Dict[str, UnityCatalogAiTool] = {
         "change in future versions.",
         input_schema=CreateFunction.schema(),
         func=_create_function,
+    ),
+    "uc_delete_function": UnityCatalogAiTool(
+        description="Delets a Unity Catalog function.",
+        input_schema=DeleteFunction.schema(),
+        func=_delete_function,
     ),
 }
 
