@@ -1,13 +1,15 @@
 # mcp-server-unitycatalog: An Unity Catalog MCP server
 
 <p align="center" float="left">
-  <img width="512" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/screen.gif">
+  <img width="256" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/vscode1.gif" />
+  <img width="256" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/vscode2.gif" />
+  <img width="256" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/vscode3.gif" />
 </p>
 
 ## TODO
 
 - [x] Implement support for `list_functions`.
-- [x] Implement support for `get_function`.
+- [x] Implement support for `get_function`.X
 - [x] Implement support for `create_python_function`.
 - [x] Implement support for `execute_function`.
 - [x] Implement support for `delete_function`.
