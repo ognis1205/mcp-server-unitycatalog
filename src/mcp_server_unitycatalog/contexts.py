@@ -22,7 +22,7 @@ from types import ModuleType
 
 
 @contextmanager
-def tempmodule(script: str) -> ModuleType:
+def create_module(script: str) -> ModuleType:
     """Creates a temporary Python module from a given script string.
 
     This context manager writes the provided script to a temporary file,

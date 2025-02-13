@@ -9,7 +9,7 @@
 ## TODO
 
 - [x] Implement support for `list_functions`.
-- [x] Implement support for `get_function`.X
+- [x] Implement support for `get_function`.
 - [x] Implement support for `create_python_function`.
 - [x] Implement support for `execute_function`.
 - [x] Implement support for `delete_function`.

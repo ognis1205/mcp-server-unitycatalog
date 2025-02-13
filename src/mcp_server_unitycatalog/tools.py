@@ -32,7 +32,7 @@ from unitycatalog.ai.core.utils.function_processing_utils import (
     generate_function_input_params_schema,
 )
 from unitycatalog.client import FunctionInfo
-from .context import tempmodule
+from .contexts import create_module
 from .settings import get_settings as Settings
 
 
@@ -218,7 +218,7 @@ def _create_function(
     # `inspect.getsourcelines` expects the argument to be a Python object defined in an actual
     # source file, meaning it does not work for objects that exist only in memory.
     # Hence, we provided a context manager responsible for handling temporary module creation.
-    with tempmodule(arguments.script) as module:
+    with create_module(arguments.script) as module:
         func = getattr(module, arguments.name)
         content = _model_dump_json(
             client.create_python_function(

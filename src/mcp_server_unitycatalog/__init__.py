@@ -10,9 +10,9 @@ MIT License (c) 2025 Shingo OKAWA
 import logging
 import sys
 from traceback import format_exc
-from .log import configure as configure_logging
+from .bootstrap import bootstrap
 from .settings import get_settings as Settings
-from .server import start as start_server
+from .server import start
 
 
 def main() -> None:
@@ -28,16 +28,9 @@ def main() -> None:
     import asyncio
 
     settings = Settings()
-    level = {
-        "debug": logging.DEBUG,
-        "info": logging.INFO,
-        "warn": logging.WARN,
-        "error": logging.ERROR,
-        "critical": logging.CRITICAL,
-    }.get(settings.uc_verbosity, logging.INFO)
-    configure_logging(level)
+    bootstrap(settings)
     asyncio.run(
-        start_server(
+        start(
             endpoint=f"{settings.uc_server}/api/2.1/unity-catalog",
             catalog=settings.uc_catalog,
             schema=settings.uc_schema,
