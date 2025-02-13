@@ -1,9 +1,9 @@
 # mcp-server-unitycatalog: An Unity Catalog MCP server
 
 <p align="center" float="left">
-  <img width="256" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/vscode1.gif" />
-  <img width="256" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/vscode2.gif" />
-  <img width="256" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/vscode3.gif" />
+  <img width="256" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/vscode1.webp" />
+  <img width="256" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/vscode2.webp" />
+  <img width="256" src="https://raw.githubusercontent.com/ognis1205/mcp-server-unitycatalog/main/docs/vscode3.webp" />
 </p>
 
 ## TODO
