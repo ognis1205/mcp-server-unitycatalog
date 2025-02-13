@@ -30,6 +30,9 @@ from mcp.types import (
 from pydantic import BaseModel, Field
 from pydantic.json import pydantic_encoder
 from unitycatalog.ai.core.client import UnitycatalogFunctionClient
+from unitycatalog.ai.core.utils.function_processing_utils import (
+    generate_function_input_params_schema,
+)
 from unitycatalog.client import FunctionInfo
 from .contexts import tempmodule
 from .settings import get_settings as Settings
@@ -88,7 +91,7 @@ UnityCatalogAiFunction: TypeAlias = Callable[
 ]
 
 
-def _model_dump_json(model_or_list: Union[BaseModel, List[BaseModel]]) -> str:
+def _model_dump_json(maybe_model: Union[BaseModel, List[BaseModel], Dict]) -> str:
     """Serializes a Pydantic model or a list of Pydantic models into a JSON string.
 
     This function ensures proper serialization using Pydantic's encoding utilities,
@@ -101,12 +104,10 @@ def _model_dump_json(model_or_list: Union[BaseModel, List[BaseModel]]) -> str:
     Returns:
         str: A JSON-formatted string representation of the input model or list.
     """
-    if isinstance(model_or_list, list):
-        return json.dumps(
-            model_or_list, default=pydantic_encoder, separators=(",", ":")
-        )
+    if isinstance(maybe_model, list) or isinstance(maybe_model, dict):
+        return json.dumps(maybe_model, default=pydantic_encoder, separators=(",", ":"))
     else:
-        return model_or_list.model_dump_json(by_alias=True, exclude_unset=True)
+        return maybe_model.model_dump_json(by_alias=True, exclude_unset=True)
 
 
 def _list_functions(
@@ -280,6 +281,37 @@ def list_tools() -> List[Tool]:
     ]
 
 
+def list_udf_tools(client: UnitycatalogFunctionClient) -> List[Tool]:
+    """Retrieves a list of user-defined functions (UDFs) registered in Unity Catalog.
+
+    This function queries Unity Catalog for all available UDFs within the specified
+    catalog and schema, then constructs a list of `Tool` objects representing these
+    functions, excluding any predefined Unity Catalog AI tools.
+
+    Args:
+        client (UnitycatalogFunctionClient): The Unity Catalog function client used
+        to query the available functions.
+
+    Returns:
+        List[Tool]: A list of `Tool` objects, each representing a UDF with its
+        name, description, and input schema.
+    """
+    settings = Settings()
+    return [
+        Tool(
+            name=func.name,
+            description=func.comment or "",
+            inputSchema=generate_function_input_params_schema(
+                func
+            ).pydantic_model.schema(),
+        )
+        for func in client.list_functions(
+            catalog=settings.uc_catalog, schema=settings.uc_schema
+        ).to_list()
+        if func.name not in UNITY_CATALOG_AI_TOOLS
+    ]
+
+
 def dispatch_tool(name: str) -> Optional[UnityCatalogAiTool]:
     """Retrieves the Unity Catalog AI tool function by name.
 
@@ -294,3 +326,37 @@ def dispatch_tool(name: str) -> Optional[UnityCatalogAiTool]:
         the specified tool name if found, otherwise `None`.
     """
     return UNITY_CATALOG_AI_TOOLS.get(name)
+
+
+def execute_function(
+    client: UnitycatalogFunctionClient,
+    name: str,
+    arguments: dict,
+) -> List[TextContent]:
+    """Executes a registered Unity Catalog function with the given parameters.
+
+    This function invokes a function stored in Unity Catalog, passing in the
+    specified arguments and returning the execution result.
+
+    Args:
+        client (UnitycatalogFunctionClient): The Unity Catalog function client.
+        name (str): The name of the function to execute (not fully qualified).
+        arguments (dict): A dictionary of parameters to pass to the function.
+
+    Returns:
+        List[TextContent]: The output of the function execution, wrapped in a
+        list of `TextContent` objects.
+    """
+    settings = Settings()
+    LOGGER.info(f"{name}: arguments: {_model_dump_json(arguments)}")
+    content = client.execute_function(
+        function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{name}",
+        parameters=arguments,
+    ).to_json()
+    LOGGER.info(f"{name}: content: {content}")
+    return [
+        TextContent(
+            type="text",
+            text=content,
+        )
+    ]

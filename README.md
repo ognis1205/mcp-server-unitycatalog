@@ -9,9 +9,9 @@
 - [x] Implement support for `list_functions`.
 - [x] Implement support for `get_functions`.
 - [x] Implement support for `create_python_function`.
-- [ ] Implement catalog explorer tools.
+- [x] Implement support for `execute_function`.
+- [ ] Implement semantic catalog explorer tools.
 - [ ] Add Docker image.
-- [ ] Consider implementing minimal data clean room support.
 - [ ] Implement `use_xxx` methods. In the current implementation, `catalog` and `schema` need to be defined when starting the server. However, they will be implemented as `use_catalog` and `use_schema` functions, dynamically updating the list of available functions when the `use_xxx` is executed.
 
 ## Overview
@@ -35,7 +35,7 @@ You can use **all Unity Catalog Functions registered in Unity Catalog** alongsid
    - Returns: A function details retrieved from Unity Catalog.
 
 3. `uc_create_function`
-   - Create a function within a parent catalog and schema. WARNING: This API is experimental and will change in future versions.
+   - Create a function within a parent catalog and schema. **WARNING: This API is experimental and will change in future versions**.
    - Input:
      - `name` (string): The name of the function (not fully-qualified).
      - `script` (string): The Python script including the function to be registered.

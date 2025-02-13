@@ -21,16 +21,18 @@ from mcp.types import (
 from pydantic import BaseModel
 from pydantic.networks import AnyHttpUrl
 from unitycatalog.ai.core.client import UnitycatalogFunctionClient
-from unitycatalog.ai.core.utils.function_processing_utils import (
-    generate_function_input_params_schema,
-    get_tool_name,
-)
 from unitycatalog.client import ApiClient, Configuration
 from .tools import (
     Content,
     list_tools as list_ucai_tools,
+    list_udf_tools,
     dispatch_tool as dispatch_ucai_tool,
+    execute_function,
 )
+
+
+# The logger instance for this module.
+LOGGER = logging.getLogger(__name__)
 
 
 async def start(endpoint: str, catalog: str, schema: str) -> None:
@@ -47,24 +49,13 @@ async def start(endpoint: str, catalog: str, schema: str) -> None:
         None
     """
     server = Server("mcp-unitycatalog")
-    logger = logging.getLogger(__name__)
     client = UnitycatalogFunctionClient(
         api_client=ApiClient(configuration=Configuration(host=endpoint))
     )
 
     @server.list_tools()
     async def list_tools() -> List[Tool]:
-        functions = client.list_functions(catalog=catalog, schema=schema)
-        return [
-            Tool(
-                name=func.name,
-                description=func.comment or "",
-                inputSchema=generate_function_input_params_schema(
-                    func
-                ).pydantic_model.schema(),
-            )
-            for func in functions.to_list()
-        ] + list_ucai_tools()
+        return list_udf_tools(client) + list_ucai_tools()
 
     @server.call_tool()
     async def call_tool(name: str, arguments: dict) -> List[Content]:
@@ -72,13 +63,9 @@ async def start(endpoint: str, catalog: str, schema: str) -> None:
         if tool is not None:
             return tool.func(server.request_context, client, arguments)
         else:
-            result = client.execute_function(
-                function_name=f"{catalog}.{schema}.{name}",
-                parameters=arguments,
-            )
-            logger.debug(f"call_tool: {result}")
-            return [TextContent(type="text", text=result.to_json())]
+            return execute_function(client, name, arguments)
 
     options = server.create_initialization_options()
+    LOGGER.info("start listening: options: {options}")
     async with stdio_server() as (read_stream, write_stream):
         await server.run(read_stream, write_stream, options, raise_exceptions=True)
