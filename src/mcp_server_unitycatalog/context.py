@@ -37,7 +37,7 @@ def tempmodule(script: str) -> ModuleType:
     with NamedTemporaryFile(suffix=".py") as tmp:
         tmp.write(script.encode())
         tmp.flush()
-        spec = import_util.spec_from_file_location(Path(temp.name).stem, tmp.name)
+        spec = import_util.spec_from_file_location(Path(tmp.name).stem, tmp.name)
         module = import_util.module_from_spec(spec)
         spec.loader.exec_module(module)
         yield module
