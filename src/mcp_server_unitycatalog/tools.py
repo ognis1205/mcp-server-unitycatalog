@@ -16,7 +16,7 @@ MIT License (c) 2025 Shingo Okawa
 import asyncio
 import json
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union, TypeAlias
+from typing import Callable, Optional, Union, TypeAlias
 from mcp.shared.context import RequestContext
 from mcp.server.session import ServerSession
 from mcp.types import (
@@ -31,9 +31,9 @@ from unitycatalog.ai.core.client import UnitycatalogFunctionClient
 from unitycatalog.ai.core.utils.function_processing_utils import (
     generate_function_input_params_schema,
 )
-from unitycatalog.client import FunctionInfo
-from .contexts import create_module
-from .settings import get_settings as Settings
+from unitycatalog.client.models.function_info import FunctionInfo
+from mcp_server_unitycatalog.settings import get_settings as Settings
+from mcp_server_unitycatalog.utils import create_module
 
 
 # The logger instance for this module.
@@ -100,18 +100,18 @@ class DeleteFunction(BaseModel):
 Content: TypeAlias = Union[TextContent, ImageContent, EmbeddedResource]
 # Represents MCP tool implementations.
 UnityCatalogAiFunction: TypeAlias = Callable[
-    [RequestContext[ServerSession], UnitycatalogFunctionClient, dict], List[Content]
+    [RequestContext[ServerSession], UnitycatalogFunctionClient, dict], list[Content]
 ]
 
 
-def _model_dump_json(maybe_model: Union[BaseModel, List[BaseModel], Dict, None]) -> str:
+def _model_dump_json(maybe_model: Union[BaseModel, list, dict, None]) -> str:
     """Serializes a Pydantic model or a list of Pydantic models into a JSON string.
 
     This function ensures proper serialization using Pydantic's encoding utilities,
     handling both single model instances and lists of models.
 
     Args:
-        maybe_model (Union[BaseModel, List[BaseModel], Dict, None]): A Pydantic model instance
+        maybe_model (Union[BaseModel, list[BaseModel], dict, None]): A Pydantic model instance
             or a list, a dict of Pydantic models to be serialized.
 
     Returns:
@@ -129,7 +129,7 @@ def _list_functions(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
     arguments: dict,
-) -> List[TextContent]:
+) -> list[Content]:
     """Lists functions within the configured Unity Catalog catalog and schema.
 
     This function retrieves a list of functions from the Unity Catalog
@@ -141,12 +141,14 @@ def _list_functions(
         arguments (dict): A dictionary of additional arguments (currently unused).
 
     Returns:
-        List[TextContent]: A list of functions retrieved from Unity Catalog.
+        list[Content]: A list of functions retrieved from Unity Catalog.
     """
-    settings, arguments = Settings(), ListFunctions(**arguments)
-    LOGGER.info(f"uc_list_functions: arguments: {_model_dump_json(arguments)}")
+    settings, model = Settings(), ListFunctions.model_validate(arguments)
+    LOGGER.info(f"uc_list_functions: arguments: {_model_dump_json(model)}")
     content = _model_dump_json(
-        client.list_functions(catalog=settings.uc_catalog, schema=settings.uc_schema)
+        client.list_functions(
+            catalog=settings.uc_catalog, schema=settings.uc_schema
+        ).to_list()
     )
     LOGGER.info(f"uc_list_functions: content: {content}")
     return [
@@ -161,7 +163,7 @@ def _get_function(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
     arguments: dict,
-) -> List[TextContent]:
+) -> list[Content]:
     """Retrieves details of a specific Unity Catalog function.
 
     This function queries the Unity Catalog for a function specified by
@@ -173,14 +175,14 @@ def _get_function(
         arguments (dict): A dictionary containing the function name.
 
     Returns:
-        List[TextContent]: A list containing a single TextContent object
+        list[Content]: A list containing a single TextContent object
         with the function details in JSON format.
     """
-    settings, arguments = Settings(), GetFunction(**arguments)
-    LOGGER.info(f"uc_get_function: arguments: {_model_dump_json(arguments)}")
+    settings, model = Settings(), GetFunction.model_validate(arguments)
+    LOGGER.info(f"uc_get_function: arguments: {_model_dump_json(model)}")
     content = _model_dump_json(
         client.get_function(
-            function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{arguments.name}",
+            function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{model.name}",
         )
     )
     LOGGER.info(f"uc_get_function: content: {content}")
@@ -196,7 +198,7 @@ def _create_function(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
     arguments: dict,
-) -> List[TextContent]:
+) -> list[Content]:
     """Creates a new Python function in Unity Catalog based on the provided script.
 
     This function extracts a specified function from the given script,
@@ -210,16 +212,16 @@ def _create_function(
             - "script" (str): The Python script containing the function definition.
 
     Returns:
-        List[TextContent]: A list containing the JSON response of the created function.
+        list[Content]: A list containing the JSON response of the created function.
     """
-    settings, arguments = Settings(), CreateFunction(**arguments)
-    LOGGER.info(f"uc_create_function: arguments: {_model_dump_json(arguments)}")
+    settings, model = Settings(), CreateFunction.model_validate(arguments)
+    LOGGER.info(f"uc_create_function: arguments: {_model_dump_json(model)}")
     # NOTE:
     # `inspect.getsourcelines` expects the argument to be a Python object defined in an actual
     # source file, meaning it does not work for objects that exist only in memory.
     # Hence, we provided a context manager responsible for handling temporary module creation.
-    with create_module(arguments.script) as module:
-        func = getattr(module, arguments.name)
+    with create_module(model.script) as module:
+        func = getattr(module, model.name)
         content = _model_dump_json(
             client.create_python_function(
                 catalog=settings.uc_catalog,
@@ -241,7 +243,7 @@ def _delete_function(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
     arguments: dict,
-) -> List[TextContent]:
+) -> list[Content]:
     """Deletes a function from Unity Catalog.
 
     This function removes a registered function from the Unity Catalog,
@@ -253,13 +255,13 @@ def _delete_function(
         arguments (dict): A dictionary containing the function name to be deleted.
 
     Returns:
-        List[TextContent]: A list containing the deletion result as a text response.
+        list[Content]: A list containing the deletion result as a text response.
     """
-    settings, arguments = Settings(), DeleteFunction(**arguments)
-    LOGGER.info(f"uc_delete_function: arguments: {_model_dump_json(arguments)}")
+    settings, model = Settings(), DeleteFunction.model_validate(arguments)
+    LOGGER.info(f"uc_delete_function: arguments: {_model_dump_json(model)}")
     content = _model_dump_json(
         client.delete_function(
-            function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{arguments.name}",
+            function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{model.name}",
         )
     )
     asyncio.run(context.session.send_tool_list_changed())
@@ -286,7 +288,7 @@ class UnityCatalogAiTool(BaseModel):
     description: str = Field(
         description="A brief description of the tool's purpose.",
     )
-    input_schema: Dict = Field(
+    input_schema: dict = Field(
         description="The JSON schema representing the expected input format.",
     )
     func: UnityCatalogAiFunction = Field(
@@ -295,40 +297,40 @@ class UnityCatalogAiTool(BaseModel):
 
 
 # Enumeration of available Unity Catalog AI tools.
-UNITY_CATALOG_AI_TOOLS: Dict[str, UnityCatalogAiTool] = {
+UNITY_CATALOG_AI_TOOLS: dict[str, UnityCatalogAiTool] = {
     "uc_list_functions": UnityCatalogAiTool(
         description="List Unity Catalog Functions within the specified parent catalog and schema. "
         "There is no guarantee of a specific ordering of the elements in the array.",
-        input_schema=ListFunctions.schema(),
+        input_schema=ListFunctions.model_json_schema(),
         func=_list_functions,
     ),
     "uc_get_function": UnityCatalogAiTool(
         description="Gets a Unity Catalog Function from within a parent catalog and schema.",
-        input_schema=GetFunction.schema(),
+        input_schema=GetFunction.model_json_schema(),
         func=_get_function,
     ),
     "uc_create_function": UnityCatalogAiTool(
         description="Creates a Unity Catalog function. WARNING: This API is experimental and will "
         "change in future versions.",
-        input_schema=CreateFunction.schema(),
+        input_schema=CreateFunction.model_json_schema(),
         func=_create_function,
     ),
     "uc_delete_function": UnityCatalogAiTool(
         description="Delets a Unity Catalog function.",
-        input_schema=DeleteFunction.schema(),
+        input_schema=DeleteFunction.model_json_schema(),
         func=_delete_function,
     ),
 }
 
 
-def list_tools() -> List[Tool]:
+def list_tools() -> list[Tool]:
     """Returns a list of available Unity Catalog AI tools.
 
     This function generates a list of `Tool` instances based on the `UnityCatalogAiTools`
     enumeration, providing structured metadata for each tool.
 
     Returns:
-        List[Tool]: A list of `Tool` objects, each containing:
+        list[Tool]: A list of `Tool` objects, each containing:
     """
     return [
         Tool(
@@ -340,7 +342,7 @@ def list_tools() -> List[Tool]:
     ]
 
 
-def list_udf_tools(client: UnitycatalogFunctionClient) -> List[Tool]:
+def list_udf_tools(client: UnitycatalogFunctionClient) -> list[Tool]:
     """Retrieves a list of user-defined functions (UDFs) registered in Unity Catalog.
 
     This function queries Unity Catalog for all available UDFs within the specified
@@ -352,13 +354,13 @@ def list_udf_tools(client: UnitycatalogFunctionClient) -> List[Tool]:
         to query the available functions.
 
     Returns:
-        List[Tool]: A list of `Tool` objects, each representing a UDF with its
+        list[Tool]: A list of `Tool` objects, each representing a UDF with its
         name, description, and input schema.
     """
     settings = Settings()
     return [
         Tool(
-            name=func.name,
+            name=func.name or "",
             description=func.comment or "",
             inputSchema=generate_function_input_params_schema(
                 func
@@ -391,7 +393,7 @@ def execute_function(
     client: UnitycatalogFunctionClient,
     name: str,
     arguments: dict,
-) -> List[TextContent]:
+) -> list[Content]:
     """Executes a registered Unity Catalog function with the given parameters.
 
     This function invokes a function stored in Unity Catalog, passing in the
@@ -403,8 +405,8 @@ def execute_function(
         arguments (dict): A dictionary of parameters to pass to the function.
 
     Returns:
-        List[TextContent]: The output of the function execution, wrapped in a
-        list of `TextContent` objects.
+        list[Content]: The output of the function execution, wrapped in a
+        list of `Content` objects.
     """
     settings = Settings()
     LOGGER.info(f"{name}: arguments: {_model_dump_json(arguments)}")

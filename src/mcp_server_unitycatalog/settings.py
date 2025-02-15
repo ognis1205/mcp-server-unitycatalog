@@ -84,4 +84,4 @@ def get_settings():
     Returns:
         Settings: A singleton instance of the Settings class.
     """
-    return Settings()
+    return Settings()  # pyright: ignore[reportCallIssue]

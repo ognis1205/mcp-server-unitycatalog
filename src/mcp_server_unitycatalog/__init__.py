@@ -10,9 +10,9 @@ MIT License (c) 2025 Shingo OKAWA
 import logging
 import sys
 from traceback import format_exc
-from .bootstrap import bootstrap
-from .settings import get_settings as Settings
-from .server import start
+from mcp_server_unitycatalog.bootstrap import bootstrap
+from mcp_server_unitycatalog.settings import get_settings as Settings
+from mcp_server_unitycatalog.server import start
 
 
 def main() -> None:

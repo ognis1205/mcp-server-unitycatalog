@@ -15,7 +15,7 @@ import sys
 from datetime import datetime
 from logging import FileHandler, Formatter, StreamHandler
 from pathlib import Path
-from .settings import Settings
+from mcp_server_unitycatalog.settings import Settings
 
 
 # Defines logging format.
