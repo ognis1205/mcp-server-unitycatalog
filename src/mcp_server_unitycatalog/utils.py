@@ -1,25 +1,25 @@
-"""Unity Catalog Model Context Protocol (MCP) Server Utilities.
+"""Unity Catalog Model Context Protocol (MCP) Server Utility Functions.
 
-This module provides utilities for handling execution contexts,
-including temporary module creation and dynamic script execution.
-These utilities enable runtime code evaluation in isolated environments,
-which is particularly useful for function registration and execution.
+This module provides helper functions.
 
 Features:
-- Dynamically creates temporary Python modules from scripts.
-- Supports isolated execution of dynamically generated code.
+- Safely applying functions to multiple Optional values (`_fmap`).
+- Serializing Pydantic models, lists, and dictionaries to JSON (`dump_json`).
+- Dynamically creating and loading temporary Python modules (`create_module`).
 
 License:
 MIT License (c) 2025 Shingo Okawa
 """
 
-import uuid
+import json
 from contextlib import contextmanager
 from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Any, Callable, Iterator, Optional, TypeVar
+from typing import Any, Callable, Iterator, Optional, TypeVar, Union
 from types import ModuleType
+from pydantic import BaseModel
+from pydantic.json import pydantic_encoder
 
 
 # R represents the return type of the function passed to _fmap.
@@ -44,6 +44,27 @@ def _fmap(func: Callable[..., Optional[R]], *maybe_nones: Optional[Any]) -> Opti
     if any(maybe is None for maybe in maybe_nones):
         return None
     return func(*maybe_nones)  # Unwrap and apply
+
+
+def dump_json(maybe_model: Union[BaseModel, list, dict, None]) -> str:
+    """Serializes a Pydantic model, list, or dictionary to a JSON string.
+
+    This function ensures proper serialization using Pydantic's encoding utilities,
+    handling both single model instances and lists/dicts of models.
+
+    Args:
+        maybe_model (Union[BaseModel, list, dict, None]): The object to serialize.
+
+    Returns:
+        str: A JSON string representation of the input, or an empty string if None
+        is provided.
+    """
+    if maybe_model is None:
+        return ""
+    elif isinstance(maybe_model, list) or isinstance(maybe_model, dict):
+        return json.dumps(maybe_model, default=pydantic_encoder, separators=(",", ":"))
+    else:
+        return maybe_model.model_dump_json(by_alias=True, exclude_unset=True)
 
 
 @contextmanager

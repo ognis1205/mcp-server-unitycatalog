@@ -14,7 +14,6 @@ MIT License (c) 2025 Shingo Okawa
 """
 
 import asyncio
-import json
 import logging
 from typing import Callable, Optional, Union, TypeAlias
 from mcp.shared.context import RequestContext
@@ -26,14 +25,13 @@ from mcp.types import (
     Tool,
 )
 from pydantic import BaseModel, Field
-from pydantic.json import pydantic_encoder
 from unitycatalog.ai.core.client import UnitycatalogFunctionClient
 from unitycatalog.ai.core.utils.function_processing_utils import (
     generate_function_input_params_schema,
 )
 from unitycatalog.client.models.function_info import FunctionInfo
 from mcp_server_unitycatalog.settings import get_settings as Settings
-from mcp_server_unitycatalog.utils import create_module
+from mcp_server_unitycatalog.utils import create_module, dump_json
 
 
 # The logger instance for this module.
@@ -104,27 +102,6 @@ UnityCatalogAiFunction: TypeAlias = Callable[
 ]
 
 
-def _model_dump_json(maybe_model: Union[BaseModel, list, dict, None]) -> str:
-    """Serializes a Pydantic model or a list of Pydantic models into a JSON string.
-
-    This function ensures proper serialization using Pydantic's encoding utilities,
-    handling both single model instances and lists of models.
-
-    Args:
-        maybe_model (Union[BaseModel, list[BaseModel], dict, None]): A Pydantic model instance
-            or a list, a dict of Pydantic models to be serialized.
-
-    Returns:
-        str: A JSON-formatted string representation of the input model or list.
-    """
-    if maybe_model is None:
-        return ""
-    elif isinstance(maybe_model, list) or isinstance(maybe_model, dict):
-        return json.dumps(maybe_model, default=pydantic_encoder, separators=(",", ":"))
-    else:
-        return maybe_model.model_dump_json(by_alias=True, exclude_unset=True)
-
-
 def _list_functions(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
@@ -144,8 +121,8 @@ def _list_functions(
         list[Content]: A list of functions retrieved from Unity Catalog.
     """
     settings, model = Settings(), ListFunctions.model_validate(arguments)
-    LOGGER.info(f"uc_list_functions: arguments: {_model_dump_json(model)}")
-    content = _model_dump_json(
+    LOGGER.info(f"uc_list_functions: arguments: {dump_json(model)}")
+    content = dump_json(
         client.list_functions(
             catalog=settings.uc_catalog, schema=settings.uc_schema
         ).to_list()
@@ -179,8 +156,8 @@ def _get_function(
         with the function details in JSON format.
     """
     settings, model = Settings(), GetFunction.model_validate(arguments)
-    LOGGER.info(f"uc_get_function: arguments: {_model_dump_json(model)}")
-    content = _model_dump_json(
+    LOGGER.info(f"uc_get_function: arguments: {dump_json(model)}")
+    content = dump_json(
         client.get_function(
             function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{model.name}",
         )
@@ -215,14 +192,14 @@ def _create_function(
         list[Content]: A list containing the JSON response of the created function.
     """
     settings, model = Settings(), CreateFunction.model_validate(arguments)
-    LOGGER.info(f"uc_create_function: arguments: {_model_dump_json(model)}")
+    LOGGER.info(f"uc_create_function: arguments: {dump_json(model)}")
     # NOTE:
     # `inspect.getsourcelines` expects the argument to be a Python object defined in an actual
     # source file, meaning it does not work for objects that exist only in memory.
     # Hence, we provided a context manager responsible for handling temporary module creation.
     with create_module(model.script) as module:
         func = getattr(module, model.name)
-        content = _model_dump_json(
+        content = dump_json(
             client.create_python_function(
                 catalog=settings.uc_catalog,
                 schema=settings.uc_schema,
@@ -258,8 +235,8 @@ def _delete_function(
         list[Content]: A list containing the deletion result as a text response.
     """
     settings, model = Settings(), DeleteFunction.model_validate(arguments)
-    LOGGER.info(f"uc_delete_function: arguments: {_model_dump_json(model)}")
-    content = _model_dump_json(
+    LOGGER.info(f"uc_delete_function: arguments: {dump_json(model)}")
+    content = dump_json(
         client.delete_function(
             function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{model.name}",
         )
@@ -409,7 +386,7 @@ def execute_function(
         list of `Content` objects.
     """
     settings = Settings()
-    LOGGER.info(f"{name}: arguments: {_model_dump_json(arguments)}")
+    LOGGER.info(f"{name}: arguments: {dump_json(arguments)}")
     content = client.execute_function(
         function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{name}",
         parameters=arguments,
