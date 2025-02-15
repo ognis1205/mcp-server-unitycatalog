@@ -10,8 +10,8 @@ MIT License (c) 2025 Shingo OKAWA
 import logging
 import sys
 from traceback import format_exc
+from mcp_server_unitycatalog.cli import get_settings as Cli
 from mcp_server_unitycatalog.bootstrap import bootstrap
-from mcp_server_unitycatalog.settings import get_settings as Settings
 from mcp_server_unitycatalog.server import start
 
 
@@ -27,13 +27,13 @@ def main() -> None:
     """
     import asyncio
 
-    settings = Settings()
-    bootstrap(settings)
+    cli = Cli()
+    bootstrap(cli)
     asyncio.run(
         start(
-            endpoint=f"{settings.uc_server}/api/2.1/unity-catalog",
-            catalog=settings.uc_catalog,
-            schema=settings.uc_schema,
+            endpoint=f"{cli.uc_server}/api/2.1/unity-catalog",
+            catalog=cli.uc_catalog,
+            schema=cli.uc_schema,
         )
     )
 

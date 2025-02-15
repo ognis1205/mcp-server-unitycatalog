@@ -15,7 +15,7 @@ import sys
 from datetime import datetime
 from logging import FileHandler, Formatter, StreamHandler
 from pathlib import Path
-from mcp_server_unitycatalog.settings import Settings
+from mcp_server_unitycatalog.cli import Cli
 
 
 # Defines logging format.
@@ -24,7 +24,7 @@ FORMAT = "%(asctime)s,%(msecs)d - %(name)s - %(levelname)s - %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def bootstrap(settings: Settings) -> None:
+def bootstrap(cli: Cli) -> None:
     """Initializes the logging configuration by setting up both file and stream handlers.
 
     This function configures the logging system with a file handler that writes logs
@@ -34,14 +34,14 @@ def bootstrap(settings: Settings) -> None:
     log file named with the current date, while the stream handler outputs log messages to stderr.
 
     Args:
-        settings (Settings): A settings object containing configuration for
+        cli (Cli): A settings object containing configuration for
         the Unity Catalog MCP server.
 
     Returns:
         None
     """
     # Initializes logging directory.
-    log_directory = settings.uc_log_directory
+    log_directory = cli.uc_log_directory
     log_directory.mkdir(parents=True, exist_ok=True)
     # Configures file logger.
     file_handler = FileHandler(
@@ -60,5 +60,5 @@ def bootstrap(settings: Settings) -> None:
         "warn": logging.WARN,
         "error": logging.ERROR,
         "critical": logging.CRITICAL,
-    }.get(settings.uc_verbosity, logging.INFO)
+    }.get(cli.uc_verbosity, logging.INFO)
     logging.basicConfig(handlers=(stream_handler, file_handler), level=level)

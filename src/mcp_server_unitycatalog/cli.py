@@ -17,18 +17,20 @@ from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
-    """Configuration settings for interacting with the Unity Catalog server.
+class Cli(BaseSettings):
+    """Configuration class for the Unity Catalog CLI.
 
-    This class loads configuration values from environment variables and
-    command-line arguments, enabling seamless integration with Unity Catalog.
+    This class defines configuration options for interacting with the Unity Catalog server
+    through the CLI. It leverages `pydantic.BaseSettings` to support environment variable
+    loading and command-line argument parsing.
 
     Attributes:
-        uc_server (str): The base URL of the Unity Catalog server.
-        uc_catalog (str): The name of the Unity Catalog catalog.
-        uc_schema (str): The name of the schema within the catalog.
-        uc_token (Optional[str]): The access token for authentication.
-        uc_verbosity (Literal): The logging verbosity level (default: "warn").
+        uc_server (str): The base URL of the Unity Catalog server for API interactions.
+        uc_catalog (str): The top-level catalog name in Unity Catalog.
+        uc_schema (str): The schema name within a Unity Catalog catalog.
+        uc_token (Optional[str]): The API access token for authentication.
+        uc_verbosity (Literal["debug", "info", "warn", "error", "critical"]): Logging verbosity level.
+        uc_log_directory (Path): Directory where Unity Catalog logs will be stored.
     """
 
     model_config = SettingsConfigDict(
@@ -75,13 +77,13 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings():
-    """Returns a cached instance of the Settings class.
+    """Returns a cached instance of the `Cli` class.
 
     This function ensures that the configuration settings are loaded only once
     and reused across multiple calls, improving performance by avoiding redundant
     parsing of environment variables or CLI arguments.
 
     Returns:
-        Settings: A singleton instance of the Settings class.
+        Settings: A singleton instance of the `Cli` class.
     """
-    return Settings()  # pyright: ignore[reportCallIssue]
+    return Cli()  # pyright: ignore[reportCallIssue]

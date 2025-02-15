@@ -30,7 +30,7 @@ from unitycatalog.ai.core.utils.function_processing_utils import (
     generate_function_input_params_schema,
 )
 from unitycatalog.client.models.function_info import FunctionInfo
-from mcp_server_unitycatalog.settings import get_settings as Settings
+from mcp_server_unitycatalog.cli import get_settings as Settings
 from mcp_server_unitycatalog.utils import create_module, dump_json
 
 
