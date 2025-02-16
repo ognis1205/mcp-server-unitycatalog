@@ -341,7 +341,7 @@ def list_udf_tools(client: UnitycatalogFunctionClient) -> list[Tool]:
             description=func.comment or "",
             inputSchema=generate_function_input_params_schema(
                 func
-            ).pydantic_model.schema(),
+            ).pydantic_model.model_json_schema(),
         )
         for func in client.list_functions(
             catalog=settings.uc_catalog, schema=settings.uc_schema

@@ -1,4 +1,4 @@
-"""Unity Catalog Model Context Protocol (MCP) Server Bootstrap Utilities.
+"""Unity Catalog Model Context Protocol (MCP) Server Configuration Utilities.
 
 This module provides functions and configurations for setting up configurations
 throughout the application.
@@ -24,7 +24,7 @@ FORMAT = "%(asctime)s,%(msecs)d - %(name)s - %(levelname)s - %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def bootstrap(cli: Cli) -> None:
+def configure(cli: Cli) -> None:
     """Initializes the logging configuration by setting up both file and stream handlers.
 
     This function configures the logging system with a file handler that writes logs
