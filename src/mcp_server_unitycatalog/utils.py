@@ -43,7 +43,7 @@ def _fmap(func: Callable[..., Optional[R]], *maybe_nones: Optional[Any]) -> Opti
     """
     if any(maybe is None for maybe in maybe_nones):
         return None
-    return func(*maybe_nones)  # Unwrap and apply
+    return func(*maybe_nones)
 
 
 def dump_json(maybe_model: Union[BaseModel, list, dict, None]) -> str:
