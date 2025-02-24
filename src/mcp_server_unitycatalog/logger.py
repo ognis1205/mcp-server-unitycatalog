@@ -80,8 +80,8 @@ _ReturnType = TypeVar("_ReturnType")
 
 def log(
     logger: Logger,
-    args_to_log: Optional[list[int]] = None,
-    kwargs_to_log: Optional[dict[str, Any]] = None,
+    args: Optional[list[int]] = None,
+    kwargs: Optional[dict[str, Any]] = None,
 ):
     """A decorator for logging function execution details.
 
@@ -90,6 +90,10 @@ def log(
 
     Args:
         logger (Logger): The logger instance to be used for logging.
+        args (Optional[list[int]]): Indices of positional arguments to log.
+            If None, all positional arguments are logged.
+        kwargs (Optional[list[str]]): Keys of keyword arguments to log.
+            If None, all keyword arguments are logged.
 
     Returns:
         Callable: A decorated function with logging behavior.
@@ -104,7 +108,7 @@ def log(
         func: Callable[_Params, _ReturnType],
     ) -> Callable[_Params, _ReturnType]:
         @functools.wraps(func)
-        def wrapper(*args: _Params.args, **kwargs: _Params.kwargs):
+        def wrapper(*_args: _Params.args, **_kwargs: _Params.kwargs):
             id = str(uuid.uuid4())
             _logger = logger.getChild(func.__name__)
             _logger.info(
@@ -113,18 +117,16 @@ def log(
                         id=id,
                         when=LogWhen.BEFORE,
                         name=func.__name__,
-                        args=args
-                        if args_to_log is None
-                        else tuple(args[i] for i in args_to_log),
-                        kwargs=kwargs
-                        if kwargs_to_log is None
-                        else {k: kwargs[k] for k in kwargs_to_log},
+                        args=_args if args is None else tuple(_args[i] for i in args),
+                        kwargs=_kwargs
+                        if kwargs is None
+                        else {k: _kwargs[k] for k in kwargs},
                         logged_at=time.time_ns(),
                     )
                 )
             )
             try:
-                result = func(*args, **kwargs)
+                result = func(*_args, **_kwargs)
                 _logger.info(
                     dump_json(
                         Log(
