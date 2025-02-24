@@ -81,7 +81,7 @@ _ReturnType = TypeVar("_ReturnType")
 def log(
     logger: Logger,
     args: Optional[list[int]] = None,
-    kwargs: Optional[dict[str, Any]] = None,
+    kwargs: Optional[list[str]] = None,
 ):
     """A decorator for logging function execution details.
 
