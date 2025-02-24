@@ -43,17 +43,6 @@ def configure(cli: Cli) -> None:
     # Initializes logging directory.
     log_directory = cli.uc_log_directory
     log_directory.mkdir(parents=True, exist_ok=True)
-    # Configures file logger.
-    file_handler = FileHandler(
-        filename=f"{log_directory}/{datetime.now().strftime('%Y-%m-%d')}.log",
-        encoding="utf-8",
-        mode="a",
-    )
-    file_handler.setFormatter(Formatter(FORMAT, datefmt=DATE_FORMAT))
-    # Configures stream logger.
-    stream_handler = StreamHandler(sys.stderr)
-    stream_handler.setFormatter(Formatter(FORMAT, datefmt=DATE_FORMAT))
-    # Set up logging with both file and stream handlers.
     level = {
         "debug": logging.DEBUG,
         "info": logging.INFO,
@@ -61,4 +50,17 @@ def configure(cli: Cli) -> None:
         "error": logging.ERROR,
         "critical": logging.CRITICAL,
     }.get(cli.uc_verbosity, logging.INFO)
+    # Configures file logger.
+    file_handler = FileHandler(
+        filename=f"{log_directory}/{datetime.now().strftime('%Y-%m-%d')}.log",
+        encoding="utf-8",
+        mode="a",
+    )
+    file_handler.setFormatter(Formatter(FORMAT, datefmt=DATE_FORMAT))
+    file_handler.setLevel(level)
+    # Configures stream logger.
+    stream_handler = StreamHandler(sys.stderr)
+    stream_handler.setFormatter(Formatter(FORMAT, datefmt=DATE_FORMAT))
+    stream_handler.setLevel(level)
+    # Set up logging with both file and stream handlers.
     logging.basicConfig(handlers=(stream_handler, file_handler), level=level)

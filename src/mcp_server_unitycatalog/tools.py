@@ -31,6 +31,7 @@ from unitycatalog.ai.core.utils.function_processing_utils import (
 )
 from unitycatalog.client.models.function_info import FunctionInfo
 from mcp_server_unitycatalog.cli import get_settings as Settings
+from mcp_server_unitycatalog.logger import log
 from mcp_server_unitycatalog.utils import create_module, dump_json
 
 
@@ -100,8 +101,16 @@ Content: TypeAlias = Union[TextContent, ImageContent, EmbeddedResource]
 UnityCatalogAiFunction: TypeAlias = Callable[
     [RequestContext[ServerSession], UnitycatalogFunctionClient, dict], list[Content]
 ]
+# class UnityCatalogAiFunction(Protocol):
+#    def __call__(
+#        self,
+#        context: RequestContext[ServerSession],
+#        client: UnitycatalogFunctionClient,
+#        arguments: dict,
+#    ) -> list[Content]: ...
 
 
+@log(logger=LOGGER, args_to_log=[2])
 def _list_functions(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
@@ -121,13 +130,11 @@ def _list_functions(
         list[Content]: A list of functions retrieved from Unity Catalog.
     """
     settings, model = Settings(), ListFunctions.model_validate(arguments)
-    LOGGER.info(f"uc_list_functions: arguments: {dump_json(model)}")
     content = dump_json(
         client.list_functions(
             catalog=settings.uc_catalog, schema=settings.uc_schema
         ).to_list()
     )
-    LOGGER.info(f"uc_list_functions: content: {content}")
     return [
         TextContent(
             type="text",
@@ -136,6 +143,7 @@ def _list_functions(
     ]
 
 
+@log(logger=LOGGER, args_to_log=[2])
 def _get_function(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
@@ -156,13 +164,11 @@ def _get_function(
         with the function details in JSON format.
     """
     settings, model = Settings(), GetFunction.model_validate(arguments)
-    LOGGER.info(f"uc_get_function: arguments: {dump_json(model)}")
     content = dump_json(
         client.get_function(
             function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{model.name}",
         )
     )
-    LOGGER.info(f"uc_get_function: content: {content}")
     return [
         TextContent(
             type="text",
@@ -171,6 +177,7 @@ def _get_function(
     ]
 
 
+@log(logger=LOGGER, args_to_log=[2])
 def _create_function(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
@@ -192,7 +199,6 @@ def _create_function(
         list[Content]: A list containing the JSON response of the created function.
     """
     settings, model = Settings(), CreateFunction.model_validate(arguments)
-    LOGGER.info(f"uc_create_function: arguments: {dump_json(model)}")
     # NOTE:
     # `inspect.getsourcelines` expects the argument to be a Python object defined in an actual
     # source file, meaning it does not work for objects that exist only in memory.
@@ -207,7 +213,6 @@ def _create_function(
             )
         )
     asyncio.run(context.session.send_tool_list_changed())
-    LOGGER.info(f"uc_create_function: content: {content}")
     return [
         TextContent(
             type="text",
@@ -216,6 +221,7 @@ def _create_function(
     ]
 
 
+@log(logger=LOGGER, args_to_log=[2])
 def _delete_function(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
@@ -235,14 +241,12 @@ def _delete_function(
         list[Content]: A list containing the deletion result as a text response.
     """
     settings, model = Settings(), DeleteFunction.model_validate(arguments)
-    LOGGER.info(f"uc_delete_function: arguments: {dump_json(model)}")
     content = dump_json(
         client.delete_function(
             function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{model.name}",
         )
     )
     asyncio.run(context.session.send_tool_list_changed())
-    LOGGER.info(f"uc_delete_function: content: {content}")
     return [
         TextContent(
             type="text",
@@ -366,6 +370,7 @@ def dispatch_tool(name: str) -> Optional[UnityCatalogAiTool]:
     return UNITY_CATALOG_AI_TOOLS.get(name)
 
 
+@log(logger=LOGGER, args_to_log=[1, 2])
 def execute_function(
     client: UnitycatalogFunctionClient,
     name: str,
@@ -386,12 +391,10 @@ def execute_function(
         list of `Content` objects.
     """
     settings = Settings()
-    LOGGER.info(f"{name}: arguments: {dump_json(arguments)}")
     content = client.execute_function(
         function_name=f"{settings.uc_catalog}.{settings.uc_schema}.{name}",
         parameters=arguments,
     ).to_json()
-    LOGGER.info(f"{name}: content: {content}")
     return [
         TextContent(
             type="text",

@@ -22,11 +22,13 @@ from pydantic import BaseModel
 from pydantic.json import pydantic_encoder
 
 
-# R represents the return type of the function passed to _fmap.
-R = TypeVar("R")
+# _ReturnType represents the return type of the function passed to `_fmap`.
+_ReturnType = TypeVar("_ReturnType")
 
 
-def _fmap(func: Callable[..., Optional[R]], *maybe_nones: Optional[Any]) -> Optional[R]:
+def _fmap(
+    func: Callable[..., Optional[_ReturnType]], *maybe_nones: Optional[Any]
+) -> Optional[_ReturnType]:
     """Applies a function to multiple Optional values, flattening the result.
 
     If any input is None, returns None. Otherwise, applies `func` to the
@@ -38,7 +40,7 @@ def _fmap(func: Callable[..., Optional[R]], *maybe_nones: Optional[Any]) -> Opti
         *maybe_nones: A variable number of Optional values of different types.
 
     Returns:
-        An Optional[R] resulting from applying `func` to the unwrapped values,
+        An Optional[_ReturnType] resulting from applying `func` to the unwrapped values,
         or None if any input is None.
     """
     if any(maybe is None for maybe in maybe_nones):
