@@ -25,17 +25,16 @@ dependencies = [
 [project.scripts]
 mcp-server-unitycatalog = "mcp_server_unitycatalog:main"
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [tool.uv]
 dev-dependencies = [
     "pyright>=1.1.393",
     "ruff>=0.9.4",
-    "pytest>=8.3.4",
-    "requests>=2.32.3", # For demonstration purpose.
-    "github",           # For demonstration purpose.
+    "pytest>=8.3.4", # For demonstration purpose.
 ]
-
-[tool.uv.sources]
-github = { git = "https://github.com/VarMonke/Github-Api-Wrapper" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
