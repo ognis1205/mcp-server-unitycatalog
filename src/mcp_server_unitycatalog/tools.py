@@ -31,7 +31,7 @@ from unitycatalog.ai.core.utils.function_processing_utils import (
 )
 from unitycatalog.client.models.function_info import FunctionInfo
 from mcp_server_unitycatalog.cli import get_settings as Settings
-from mcp_server_unitycatalog.logger import log
+from mcp_server_unitycatalog.logger import observe
 from mcp_server_unitycatalog.utils import create_module, dump_json
 
 
@@ -103,7 +103,7 @@ UnityCatalogAiFunction: TypeAlias = Callable[
 ]
 
 
-@log(logger=LOGGER, args=[2])
+@observe(by=LOGGER, args=[2])
 def _list_functions(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
@@ -136,7 +136,7 @@ def _list_functions(
     ]
 
 
-@log(logger=LOGGER, args=[2])
+@observe(by=LOGGER, args=[2])
 def _get_function(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
@@ -170,7 +170,7 @@ def _get_function(
     ]
 
 
-@log(logger=LOGGER, args=[2])
+@observe(by=LOGGER, args=[2])
 def _create_function(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
@@ -214,7 +214,7 @@ def _create_function(
     ]
 
 
-@log(logger=LOGGER, args=[2])
+@observe(by=LOGGER, args=[2])
 def _delete_function(
     context: RequestContext[ServerSession],
     client: UnitycatalogFunctionClient,
@@ -363,7 +363,7 @@ def dispatch_tool(name: str) -> Optional[UnityCatalogAiTool]:
     return UNITY_CATALOG_AI_TOOLS.get(name)
 
 
-@log(logger=LOGGER, args=[1, 2])
+@observe(by=LOGGER, args=[1, 2])
 def execute_function(
     client: UnitycatalogFunctionClient,
     name: str,

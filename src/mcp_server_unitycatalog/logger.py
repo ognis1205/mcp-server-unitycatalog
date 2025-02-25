@@ -21,7 +21,7 @@ from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from mcp_server_unitycatalog.utils import dump_json
 
 
-class LogWhen(str, Enum):
+class When(str, Enum):
     """Specifies when logging was performed in the `log` decorator.
 
     Attributes:
@@ -45,7 +45,7 @@ class Log(BaseModel):
     id: str = Field(
         description="Unique identifier for the log entry.",
     )
-    when: LogWhen = Field(
+    when: When = Field(
         description="Indicates when the log was generated (e.g., before, after, or on exception).",
     )
     name: str = Field(
@@ -78,8 +78,8 @@ _Params = ParamSpec("_Params")
 _ReturnType = TypeVar("_ReturnType")
 
 
-def log(
-    logger: Logger,
+def observe(
+    by: Logger,
     args: Optional[list[int]] = None,
     kwargs: Optional[list[str]] = None,
 ):
@@ -89,7 +89,7 @@ def log(
     and upon exceptions using a structured log format.
 
     Args:
-        logger (Logger): The logger instance to be used for logging.
+        by (Logger): The logger instance to be used for logging.
         args (Optional[list[int]]): Indices of positional arguments to log.
             If None, all positional arguments are logged.
         kwargs (Optional[list[str]]): Keys of keyword arguments to log.
@@ -110,46 +110,35 @@ def log(
         @functools.wraps(func)
         def wrapper(*_args: _Params.args, **_kwargs: _Params.kwargs):
             id = str(uuid.uuid4())
-            _logger = logger.getChild(func.__name__)
-            _logger.info(
-                dump_json(
-                    Log(
-                        id=id,
-                        when=LogWhen.BEFORE,
-                        name=func.__name__,
-                        args=_args if args is None else tuple(_args[i] for i in args),
-                        kwargs=_kwargs
-                        if kwargs is None
-                        else {k: _kwargs[k] for k in kwargs},
-                        logged_at=time.time_ns(),
-                    )
-                )
+            logger = by.getChild(func.__name__)
+            before = Log(
+                id=id,
+                when=When.BEFORE,
+                name=func.__name__,
+                args=_args if args is None else tuple(_args[i] for i in args),
+                kwargs=_kwargs if kwargs is None else {k: _kwargs[k] for k in kwargs},
+                logged_at=time.time_ns(),
             )
+            logger.info(dump_json(before))
             try:
                 result = func(*_args, **_kwargs)
-                _logger.info(
-                    dump_json(
-                        Log(
-                            id=id,
-                            when=LogWhen.AFTER,
-                            name=func.__name__,
-                            result=result,
-                            logged_at=time.time_ns(),
-                        )
-                    )
+                after = Log(
+                    id=id,
+                    when=When.AFTER,
+                    name=func.__name__,
+                    result=result,
+                    logged_at=time.time_ns(),
                 )
+                logger.info(dump_json(after))
             except Exception as e:
-                _logger.info(
-                    dump_json(
-                        Log(
-                            id=id,
-                            when=LogWhen.EXCEPTION,
-                            name=func.__name__,
-                            exception=str(e),
-                            logged_at=time.time_ns(),
-                        )
-                    )
+                exception = Log(
+                    id=id,
+                    when=When.EXCEPTION,
+                    name=func.__name__,
+                    exception=str(e),
+                    logged_at=time.time_ns(),
                 )
+                logger.info(dump_json(exception))
                 raise e
             return result
 
