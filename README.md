@@ -101,8 +101,6 @@ Add this to your `claude_desktop_config.json` (or `cline_mcp_settings.json`):
         "run",
         "--rm",
         "-i",
-        "--mount",
-        "type=bind,src=/Users/username,dst=/Users/username",
         "mcp/unitycatalog",
         "--uc_server",
         "<your unity catalog url>",
