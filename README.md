@@ -8,7 +8,7 @@
 
 ## Overview
 
-A Model Context Protocol server for [Unity Catalog](https://www.unitycatalog.io/) Functions. This server provides [Unity Catalog Functions](https://docs.unitycatalog.io/usage/functions/) as MCP tools.
+A Model Context Protocol server for [Unity Catalog](https://www.unitycatalog.io/). This server provides [Unity Catalog Functions](https://docs.unitycatalog.io/usage/functions/) as MCP tools.
 
 ### Tools
 
