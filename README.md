@@ -63,6 +63,7 @@ Add this to your `claude_desktop_config.json` (or `cline_mcp_settings.json`):
 
 <details>
 <summary>Using uv</summary>
+
 ```json
 {
   "mcpServers": {
@@ -88,7 +89,9 @@ Add this to your `claude_desktop_config.json` (or `cline_mcp_settings.json`):
 
 <details>
 <summary>Using docker</summary>
+
 * Note: replace '/Users/username' with the a path that you want to be accessible by this tool
+
 ```json
 {
   "mcpServers": {
