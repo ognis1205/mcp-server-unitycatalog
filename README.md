@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/ognis1205-mcp-server-unitycatalog-badge.jpg)](https://mseep.ai/app/ognis1205-mcp-server-unitycatalog)
+
 # mcp-server-unitycatalog: An Unity Catalog MCP server
 
 <p align="center" float="left">
